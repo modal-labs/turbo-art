@@ -118,7 +118,7 @@ class Model:
 
 
 base_path = Path(__file__).parent
-static_path = base_path.joinpath("frontend", "src", "dist")
+static_path = base_path.joinpath("src", "dist")
 
 
 @stub.function(
