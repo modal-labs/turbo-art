@@ -1,0 +1,421 @@
+<script lang="ts">
+  import {
+    Github,
+    Loader,
+    Upload,
+    Undo,
+    Redo,
+    ArrowDownToLine,
+    ArrowLeftSquare,
+    MoveUpRight,
+    Sparkle,
+  } from "lucide-svelte";
+  import { onMount } from "svelte";
+  import paper from "paper";
+  import { throttle, debounce } from "throttle-debounce";
+
+  import BackgroundGradient from "$lib/BackgroundGradient.svelte";
+  import modalLogoWithText from "$lib/assets/logotype.svg";
+  import Paint from "$lib/Paint.svelte";
+  import defaultInputImage from "$lib/assets/mocha_outside.png";
+
+  let value: string;
+  let promptPlaceholder: string = "studio ghibli, 8k, wolf etc....";
+  let promptPlaceholderValue: string = "studio ghibli, 8k, wolf";
+  let imgInput: HTMLImageElement;
+  let imgOutput: HTMLImageElement;
+  let canvasDrawLayer: HTMLCanvasElement;
+
+  let isImageUploaded = false;
+  let firstImageGenerated = false;
+
+  // we track lastUpdatedAt so that expired requests don't overwrite the latest
+  let lastUpdatedAt = 0;
+
+  // used for undo/redo functionality
+  let outputImageHistory: string[] = [];
+  $: currentOutputImageIndex = 0;
+
+  $: isLoading = false;
+
+  $: brushSize = "sm";
+  $: paint = "black"; // can be hex
+  const radiusByBrushSize: Record<string, number> = {
+    xs: 1,
+    sm: 2,
+    md: 3,
+    lg: 4,
+  };
+  const setPaint = (e: CustomEvent<string>) => {
+    paint = e.detail;
+  };
+  const setBrushSize = (e: CustomEvent<string>) => {
+    brushSize = e.detail;
+  };
+
+  onMount(() => {
+    /* 
+      Setup paper.js for canvas which is a layer above our input image.
+      Paper is used for drawing/paint functionality.
+    */
+    paper.setup(canvasDrawLayer);
+    const tool = new paper.Tool();
+
+    let path: paper.Path;
+
+    tool.onMouseDown = (event: paper.ToolEvent) => {
+      path = new paper.Path();
+      path.strokeColor = new paper.Color(paint);
+      path.strokeWidth = radiusByBrushSize[brushSize] * 4;
+      path.add(event.point);
+
+      throttledgenerateOutputImage();
+    };
+
+    tool.onMouseDrag = (event: paper.ToolEvent) => {
+      path.add(event.point);
+
+      throttledgenerateOutputImage();
+    };
+
+    imgInput.onload = () => {
+      resizeImage(imgInput);
+      isImageUploaded = true;
+
+      // kick off an inference on first image load so output image is populated as well
+      // otherwise it will be empty
+      if (!firstImageGenerated) {
+        generateOutputImage();
+        firstImageGenerated = true;
+      }
+    };
+
+    imgOutput.onload = () => {
+      resizeImage(imgOutput);
+    };
+    imgInput.src = defaultInputImage;
+  });
+
+  // Our images need to be sized 320x320 for both input and output
+  // This is important because we combine the canvas layer with the image layer
+  // so the pixels need to matchup.
+  const resizeImage = (img: HTMLImageElement) => {
+    let newWidth;
+    let newHeight;
+    if (img.width > img.height) {
+      const aspectRatio = img.height / img.width;
+      newWidth = 320;
+      newHeight = newWidth * aspectRatio;
+    } else {
+      const aspectRatio = img.width / img.height;
+      newHeight = 320;
+      newWidth = newHeight * aspectRatio;
+    }
+
+    img.style.width = `${newWidth}px`;
+    img.style.height = `${newHeight}px`;
+  };
+
+  function loadImage(e: Event) {
+    const target = e.target as HTMLInputElement;
+    if (!target || !target.files) return;
+    const file = target.files[0];
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e?.target?.result && typeof e.target.result === "string") {
+          isImageUploaded = true;
+          imgInput.src = e?.target.result;
+          resizeImage(imgInput);
+        }
+      };
+
+      reader.readAsDataURL(file);
+
+      generateOutputImage();
+    }
+  }
+
+  function getImageData(useOutputImage: boolean = false): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = 320;
+      tempCanvas.height = 320;
+      const tempCtx = tempCanvas.getContext("2d");
+      if (!tempCtx) {
+        reject("no context");
+        return;
+      }
+
+      if (useOutputImage) {
+        tempCtx.drawImage(imgOutput, 0, 0, 320, 320);
+      } else {
+        // combines the canvas with the input image so that the
+        // generated image contains edits made by paint brush
+        tempCtx.drawImage(imgInput, 0, 0, 320, 320);
+        tempCtx.drawImage(canvasDrawLayer, 0, 0, 320, 320);
+      }
+
+      tempCanvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject("blob creation failed");
+        }
+      }, "image/jpeg");
+    });
+  }
+
+  const throttledgenerateOutputImage = throttle(
+    250,
+    () => {
+      generateOutputImage();
+    },
+    { noLoading: false, noTrailing: false },
+  );
+
+  const debouncedgenerateOutputImage = debounce(
+    100,
+    () => {
+      generateOutputImage();
+    },
+    { atBegin: false },
+  );
+
+  const movetoCanvas = () => {
+    imgInput.src = imgOutput.src;
+  };
+
+  const downloadImage = () => {
+    let a = document.createElement("a");
+    a.href = imgOutput.src;
+    a.download = "modal-generated-image.jpeg";
+    a.click();
+  };
+
+  const enhance = () => {
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => generateOutputImage(true), 150 * i);
+    }
+  };
+
+  const redoOutputImage = () => {
+    if (currentOutputImageIndex > 0 && outputImageHistory.length > 1) {
+      currentOutputImageIndex -= 1;
+      imgOutput.src = outputImageHistory[currentOutputImageIndex];
+    } else {
+      generateOutputImage();
+    }
+  };
+
+  const undoOutputImage = () => {
+    if (currentOutputImageIndex < outputImageHistory.length - 1) {
+      currentOutputImageIndex += 1;
+      imgOutput.src = outputImageHistory[currentOutputImageIndex];
+    }
+  };
+
+  const generateOutputImage = async (useOutputImage: boolean = false) => {
+    isLoading = true;
+    const data = await getImageData(useOutputImage);
+
+    const formData = new FormData();
+    formData.append("image", data, "image.jpg");
+    formData.append("prompt", value || promptPlaceholderValue);
+
+    const sentAt = new Date().getTime();
+    fetch(window.INFERENCE_BASE_URL, {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.blob())
+      .then((blob) => {
+        if (sentAt > lastUpdatedAt) {
+          const imageURL = URL.createObjectURL(blob);
+          outputImageHistory = [imageURL, ...outputImageHistory];
+          if (outputImageHistory.length > 10) {
+            outputImageHistory = outputImageHistory.slice(0, 10);
+          }
+          imgOutput.src = imageURL;
+          lastUpdatedAt = sentAt;
+        }
+
+        firstImageGenerated = true;
+      })
+      .finally(() => (isLoading = false));
+  };
+</script>
+
+<BackgroundGradient />
+<main class="flex flex-col items-center sm:pt-16">
+  <div class="container">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-medium pb-1">Welcome to AI Paint</h2>
+        <div class="font-sm">
+          Try drawing a hat on the dog! The image generation is powered by
+          Stabilitiy's <a
+            class="primary underline"
+            href="https://stability.ai/news/stability-ai-sdxl-turbo"
+            >SDXL Turbo</a
+          >
+        </div>
+      </div>
+      <div class="button py-2 px-5 font-medium">
+        <Github size={16} />View Code
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <div class="mb-6 font-semibold">Input</div>
+      <input
+        type="file"
+        accept="image/*"
+        id="file-upload"
+        hidden
+        on:change={loadImage}
+      />
+      <label
+        for="file-upload"
+        class="button flex-col w-[446px] h-[76px] max-w-full"
+      >
+        <div class="flex items-center gap-2 font-medium">
+          <Upload size={16} />
+          Upload Image
+        </div>
+        <span class="text-xs">PNG, JPEG</span>
+      </label>
+    </div>
+
+    <div class="mt-6">
+      <h3 class="mb-6 font-semibold">Prompt</h3>
+      <input
+        class="rounded-lg border border-white/20 bg-white/10 py-4 px-6 outline-none w-full"
+        bind:value
+        placeholder={promptPlaceholder}
+        on:input={debouncedgenerateOutputImage}
+      />
+    </div>
+
+    <div class="mt-6 flex items-center flex-col sm:flex-row">
+      <div
+        class="pr-7 sm:border-r border-white/10 flex flex-col sm:flex-row items-center"
+      >
+        <div>
+          <div class="pb-6">
+            <div class="mb-2 font-medium">Canvas</div>
+            <div>Draw on the image to generate a new one</div>
+          </div>
+
+          <img
+            alt="input"
+            bind:this={imgInput}
+            class="absolute w-[320px] h-[320px] bg-[#D9D9D9] pointer-events-none z-[-1]"
+            class:hidden={!isImageUploaded}
+          />
+          <canvas
+            bind:this={canvasDrawLayer}
+            width={320}
+            height={320}
+            class="w-[320px] h-[320px] z-1"
+          />
+        </div>
+
+        <div class="ml-6">
+          <Paint
+            {paint}
+            {brushSize}
+            on:clearCanvas={() => {
+              paper.project.activeLayer.removeChildren();
+              paper.view.update();
+              generateOutputImage();
+            }}
+            on:setPaint={setPaint}
+            on:setBrushSize={setBrushSize}
+          />
+        </div>
+      </div>
+
+      <div class="sm:pl-7 flex flex-col sm:flex-row">
+        <div>
+          <div class="pb-6">
+            <div class="mb-2 flex items-center gap-1 font-medium">
+              Output
+              {#if isLoading}
+                <Loader size={14} class="animate-spin" />
+              {/if}
+            </div>
+            <div>Generated Image</div>
+          </div>
+
+          <img
+            alt="output"
+            bind:this={imgOutput}
+            class="w-[320px] h-[320px] bg-[#D9D9D9]"
+            class:hidden={!firstImageGenerated}
+          />
+        </div>
+        <div class="flex justify-center sm:justify-between ml-6 items-center">
+          <div class="flex flex-col gap-4 mb-[58px]">
+            <div class="btns-container justify-space-between">
+              <button class="text-xs flex gap-1.5" on:click={undoOutputImage}
+                ><Undo size={16} />Back</button
+              >
+              <div class="w-[1px] h-4 bg-white/10" />
+              <button class="text-xs flex gap-1.5" on:click={redoOutputImage}
+                ><Redo size={16} />Next</button
+              >
+            </div>
+            <button class="text-xs btns-container" on:click={enhance}>
+              <Sparkle size={16} />Enhance
+            </button>
+            <button class="text-xs btns-container" on:click={movetoCanvas}>
+              <ArrowLeftSquare size={16} />Move to Canvas
+            </button>
+
+            <button class="text-xs btns-container" on:click={downloadImage}>
+              <ArrowDownToLine size={16} /> Download
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-full container flex my-4 justify-between items-center">
+    <div class="flex items-center gap-2">
+      Built with <img
+        class="modal-logo"
+        alt="Modal logo"
+        src={modalLogoWithText}
+      />
+    </div>
+    <a
+      href="https://modal.com/docs/guide"
+      class="button px-5 py-[6px] font-medium"
+    >
+      Get Started <MoveUpRight size={16} />
+    </a>
+  </div>
+</main>
+
+<style lang="postcss">
+  .container {
+    @apply bg-white/10 border border-white/20 rounded-lg p-6 max-w-screen-lg;
+  }
+
+  .btns-container {
+    @apply flex items-center gap-2.5 py-2 px-3 border rounded-[10px] border-white/5 bg-white/10;
+    width: 144px;
+  }
+
+  .button {
+    @apply border border-primary bg-primary/20 rounded-lg justify-center items-center flex gap-2 cursor-pointer;
+  }
+
+  .modal-logo {
+    width: 108px;
+    height: 32px;
+  }
+</style>
