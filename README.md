@@ -2,7 +2,7 @@
 
 A playground for creative exploration that uses SDXL Turbo for real-time image editing. Try it now at [https://turbo.art](https://turbo.art)!
 
-![quillman](https://user-images.githubusercontent.com/5786378/233804923-c13627de-97db-4050-a36b-62d955db9c19.gif)
+![turbo-art](https://github.com/modal-labs/turbo-art/assets/5786378/bb185f24-9946-4c26-a7ca-7c8732ea77f0)
 
 The entire app is serverless and hosted on [Modal](https://modal.com/).
 
