@@ -111,7 +111,8 @@
     outputImageHistory.unshift(src);
     currentOutputImageIndex = 0;
 
-    setTimeout(generateOutputImage, 50); // wait for onload before generating new image
+    // wait for onload before generating an image
+    setTimeout(generateOutputImage, 100);
   };
 
   // Our images need to be sized 320x320 for both input and output
@@ -210,11 +211,6 @@
   };
 
   const enhance = () => {
-    if (value === "good boy") {
-      setImage(easterEggImage);
-      return;
-    }
-
     generateOutputImage(true, 10);
   };
 
@@ -223,6 +219,10 @@
       currentOutputImageIndex -= 1;
       imgOutput.src = outputImageHistory[currentOutputImageIndex];
     } else {
+      if (value === "good boy") {
+        setImage(easterEggImage);
+        return;
+      }
       generateOutputImage(true);
     }
   };
