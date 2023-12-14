@@ -211,7 +211,7 @@
   };
 
   const enhance = () => {
-    generateOutputImage(true, 10);
+    generateOutputImage(true, 6);
   };
 
   const redoOutputImage = () => {
