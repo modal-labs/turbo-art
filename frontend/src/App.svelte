@@ -323,7 +323,7 @@
 
     <div class="mt-3">
       <h3 class="mb-3 font-semibold">Prompt</h3>
-      <p>Try drawing an umbrella on the beach!</p>
+      <p>Try drawing a bird in the sky!</p>
       <input
         class="rounded-lg border border-white/20 bg-white/10 py-4 px-6 outline-none w-full mt-3"
         bind:value
