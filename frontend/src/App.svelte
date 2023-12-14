@@ -188,7 +188,7 @@
     () => {
       generateOutputImage();
     },
-    { noLoading: false, noTrailing: false },
+    { noLoading: false, noTrailing: false }
   );
 
   const debouncedgenerateOutputImage = debounce(
@@ -196,7 +196,7 @@
     () => {
       generateOutputImage();
     },
-    { atBegin: false },
+    { atBegin: false }
   );
 
   const movetoCanvas = () => {
@@ -236,7 +236,7 @@
 
   const generateOutputImage = async (
     useOutputImage: boolean = false,
-    iterations: number = 2,
+    iterations: number = 2
   ) => {
     isLoading = true;
     const data = await getImageData(useOutputImage);
@@ -368,7 +368,9 @@
             </button>
             <button
               on:click={() => setImage(beachImage)}
-              on:click={() => (value = "ufo, invasion, sci-fi, beam")}
+              on:click={() =>
+                (value =
+                  "sci-fi scene from star wars, spaceships in the background, cinematic")}
             >
               <img
                 class="w-14 h-14 bg-gray"
@@ -390,8 +392,7 @@
             </button>
             <button
               on:click={() => setImage(carImage)}
-              on:click={() =>
-                (value = "car driving through a tropical island, watercolor")}
+              on:click={() => (value = "car, neon lights, comic book")}
             >
               <img
                 class="w-14 h-14 bg-gray"
