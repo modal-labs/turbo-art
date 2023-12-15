@@ -32,11 +32,35 @@
 
   const handleWindowResize = () => {
     const isSmallWindow = window.innerWidth <= breakpointSm;
-    console.log(isSmallWindow);
     movePaintComponent = isSmallWindow;
   };
 
-  let value: string = "cityscape, studio ghibli, illustration";
+  const defaultPromptByImage = {
+    abstract: "cityscape, studio ghibli, illustration",
+    beach:
+      "sci-fi scene from star wars, spaceships in the background, cinematic",
+    puppy: "cartoon bear, pixar, bright, happy",
+    car: "neon lights, comic book",
+  };
+  const promptOptionsByImage: Record<string, string[]> = {
+    abstract: [
+      "a scene from Jodorowsky’s Dune, surreal, sandworm in the background",
+      "lunar landing in the style of a van gogh painting",
+    ],
+    beach: [
+      "Mediterranean city, impressionist painting, purple tint",
+      "coral reef in the style of Spongebob, cartoon, animated",
+    ],
+    puppy: ["evil cybernetic wolf, watercolor", "3d claymation Shiba Inu"],
+    car: [
+      "Tesla driving on the Moon, planets in the background",
+      "futuristic car in cyberpunk cityscape, photorealistic",
+    ],
+  };
+  let value: string = defaultPromptByImage["abstract"];
+  $: currentImageName = "abstract";
+  $: promptOptions = promptOptionsByImage[currentImageName];
+
   let imgInput: HTMLImageElement;
   let imgOutput: HTMLImageElement;
   let canvasDrawLayer: HTMLCanvasElement;
@@ -127,6 +151,11 @@
 
     // wait for onload before generating an image
     setTimeout(generateOutputImage, 100);
+  };
+
+  const setPrompt = (prompt: string) => {
+    value = prompt;
+    generateOutputImage();
   };
 
   // Our images need to be sized 320x320 for both input and output
@@ -225,7 +254,7 @@
   };
 
   const enhance = () => {
-    generateOutputImage(true, 6);
+    generateOutputImage(true, 10);
   };
 
   const redoOutputImage = () => {
@@ -315,30 +344,18 @@
         href="https://stability.ai/news/stability-ai-sdxl-turbo">SDXL Turbo</a
       >
     </div>
-    <div class="mt-3">
-      <div class="mb-3 font-semibold">Input</div>
-      <input
-        type="file"
-        accept="image/*"
-        id="file-upload"
-        hidden
-        on:change={loadImage}
-      />
-      <label
-        for="file-upload"
-        class="button flex-col w-[446px] h-[76px] max-w-full"
-      >
-        <div class="flex items-center gap-2 font-medium">
-          <Upload size={16} />
-          Upload Image
-        </div>
-        <span class="text-xs">PNG, JPEG</span>
-      </label>
-    </div>
 
     <div class="mt-3">
       <h3 class="mb-3 font-semibold">Prompt</h3>
-      <p>Try drawing a bird in the sky!</p>
+      <div class="flex flex-col sm:flex-row gap-2">
+        {#each promptOptions as item}
+          <button
+            class="btns-container text-xs py-0.5 px-2"
+            style="width:fit-content"
+            on:click={() => setPrompt(item)}>{item}</button
+          >
+        {/each}
+      </div>
       <input
         class="rounded-lg border border-white/20 bg-white/10 py-4 px-6 outline-none w-full mt-3"
         bind:value
@@ -370,9 +387,9 @@
 
           <div class="mt-3 flex gap-4">
             <button
+              on:click={() => (currentImageName = "abstract")}
               on:click={() => setImage(abstractImage)}
-              on:click={() =>
-                (value = "cityscape, studio ghibli, illustration")}
+              on:click={() => (value = defaultPromptByImage["abstract"])}
             >
               <img
                 class="w-14 h-14 bg-gray"
@@ -382,10 +399,9 @@
               />
             </button>
             <button
+              on:click={() => (currentImageName = "beach")}
               on:click={() => setImage(beachImage)}
-              on:click={() =>
-                (value =
-                  "sci-fi scene from star wars, spaceships in the background, cinematic")}
+              on:click={() => (value = defaultPromptByImage["beach"])}
             >
               <img
                 class="w-14 h-14 bg-gray"
@@ -395,8 +411,9 @@
               />
             </button>
             <button
+              on:click={() => (currentImageName = "puppy")}
               on:click={() => setImage(puppyImage)}
-              on:click={() => (value = "cartoon bear, pixar, bright, happy")}
+              on:click={() => (value = defaultPromptByImage["puppy"])}
             >
               <img
                 class="w-14 h-14 bg-gray"
@@ -406,8 +423,9 @@
               />
             </button>
             <button
+              on:click={() => (currentImageName = "car")}
               on:click={() => setImage(carImage)}
-              on:click={() => (value = "car, neon lights, comic book")}
+              on:click={() => (value = defaultPromptByImage["car"])}
             >
               <img
                 class="w-14 h-14 bg-gray"
@@ -458,7 +476,7 @@
 
         <div class="flex sm:justify-between sm:ml-6">
           {#if movePaintComponent}
-            <div class="mr-6 mt-3">
+            <div class="mt-3 mr-3">
               <Paint
                 {paint}
                 {brushSize}
@@ -498,6 +516,25 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="mt-3">
+      <input
+        type="file"
+        accept="image/*"
+        id="file-upload"
+        hidden
+        on:change={loadImage}
+      />
+      <label
+        for="file-upload"
+        class="button flex-col w-[446px] h-[76px] max-w-full"
+      >
+        <div class="flex items-center gap-2 font-medium">
+          <Upload size={16} />
+          Upload Image
+        </div>
+        <span class="text-xs">PNG, JPEG</span>
+      </label>
     </div>
   </div>
 
