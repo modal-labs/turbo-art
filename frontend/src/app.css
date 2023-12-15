@@ -4,12 +4,6 @@
 @tailwind utilities;
 
 @layer base {
-  @font-face {
-    font-family: "Tosh Modal";
-    src: url("/fonts/tosh/ToshModal-[wght].ttf") format("truetype");
-    font-display: swap;
-  }
-
   body {
     @apply bg-ground text-gray-200;
     color-scheme: dark;
