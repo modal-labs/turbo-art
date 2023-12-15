@@ -28,14 +28,11 @@
 
   const fullConfig = resolveConfig(tailwindConfig);
   const breakpointSm = parseInt(fullConfig.theme.screens.sm);
-  // on mobile we only have one image showing and show updates there
-  // so we need to track this and check this in spots where we generate
-  // using the output image
-  $: isMobile = false;
+  $: movePaintComponent = false;
 
   const handleWindowResize = () => {
     const isSmallWindow = window.innerWidth <= breakpointSm;
-    isMobile = isSmallWindow;
+    movePaintComponent = isSmallWindow;
   };
 
   const promptOptionsByImage: Record<string, string[]> = {
@@ -297,9 +294,6 @@
     iterations: number = 2,
   ) => {
     isLoading = true;
-    if (isMobile) {
-      useOutputImage = false;
-    }
     const data = await getImageData(useOutputImage);
 
     const formData = new FormData();
@@ -320,13 +314,7 @@
           if (outputImageHistory.length > 10) {
             outputImageHistory = outputImageHistory.slice(0, 10);
           }
-
-          if (isMobile) {
-            imgInput.src = imageURL;
-          } else {
-            imgOutput.src = imageURL;
-          }
-
+          imgOutput.src = imageURL;
           if (useOutputImage) {
             numIterations += iterations;
           } else {
@@ -392,12 +380,7 @@
       <div class="pr-7 sm:border-r border-white/10 flex flex-col sm:flex-row">
         <div>
           <div class="pb-3">
-            <div class="mb-2 font-medium gap-1 flex items-center">
-              Canvas
-              {#if isLoading && isMobile}
-                <Loader size={14} class="animate-spin" />
-              {/if}
-            </div>
+            <div class="mb-2 font-medium">Canvas</div>
             <div>Draw on the image to generate a new one</div>
           </div>
 
@@ -466,7 +449,7 @@
           </div>
         </div>
 
-        {#if !isMobile}
+        {#if !movePaintComponent}
           <div class="sm:ml-6 mt-3 sm:mt-[68px]">
             <Paint
               {paint}
@@ -484,29 +467,27 @@
       </div>
 
       <div class="sm:pl-7 flex flex-col sm:flex-row">
-        {#if !isMobile}
-          <div>
-            <div class="pb-3">
-              <div class="mb-2 flex items-center gap-1 font-medium">
-                Output
-                {#if isLoading}
-                  <Loader size={14} class="animate-spin" />
-                {/if}
-              </div>
-              <div>Generated Image (iterations: {numIterations})</div>
+        <div>
+          <div class="pb-3">
+            <div class="mb-2 flex items-center gap-1 font-medium">
+              Output
+              {#if isLoading}
+                <Loader size={14} class="animate-spin" />
+              {/if}
             </div>
-
-            <img
-              alt="output"
-              bind:this={imgOutput}
-              class="w-[320px] h-[320px] bg-[#D9D9D9]"
-              class:hidden={!firstImageGenerated}
-            />
+            <div>Generated Image (iterations: {numIterations})</div>
           </div>
-        {/if}
+
+          <img
+            alt="output"
+            bind:this={imgOutput}
+            class="w-[320px] h-[320px] bg-[#D9D9D9]"
+            class:hidden={!firstImageGenerated}
+          />
+        </div>
 
         <div class="flex sm:justify-between sm:ml-6">
-          {#if isMobile}
+          {#if movePaintComponent}
             <div class="mt-3 mr-3">
               <Paint
                 {paint}
@@ -537,11 +518,9 @@
             >
               <Sparkle size={16} />Enhance
             </button>
-            {#if !isMobile}
-              <button class="text-xs btns-container" on:click={movetoCanvas}>
-                <ArrowLeftSquare size={16} />Move to Canvas
-              </button>
-            {/if}
+            <button class="text-xs btns-container" on:click={movetoCanvas}>
+              <ArrowLeftSquare size={16} />Move to Canvas
+            </button>
 
             <button class="text-xs btns-container" on:click={downloadImage}>
               <ArrowDownToLine size={16} /> Download
