@@ -2,7 +2,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
-from modal import Image, Mount, Stub, asgi_app, gpu, web_endpoint
+from modal import Image, Mount, Stub, asgi_app, web_endpoint
 
 
 def download_models():
@@ -120,9 +120,8 @@ static_path = base_path.joinpath("frontend", "dist")
     image=web_image,
     keep_warm=1,
     allow_concurrent_inputs=30,
-    custom_domains=["turbo.art"],
 )
-@asgi_app()
+@asgi_app(custom_domains=["turbo.art"])
 def fastapi_app():
     web_app = FastAPI()
     from jinja2 import Template
