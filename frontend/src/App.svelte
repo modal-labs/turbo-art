@@ -35,7 +35,6 @@
     movePaintComponent = isSmallWindow;
   };
 
-
   const promptOptionsByImage: Record<string, string[]> = {
     abstract: [
       "cityscape, studio ghibli, illustration",
@@ -47,7 +46,11 @@
       "Mediterranean city, impressionist painting, purple tint",
       "coral reef in the style of Spongebob, cartoon, animated",
     ],
-    puppy: ["cartoon bear, pixar, bright, happy", "evil cybernetic wolf, watercolor", "3d claymation Shiba Inu"],
+    puppy: [
+      "cartoon bear, pixar, bright, happy",
+      "evil cybernetic wolf, watercolor",
+      "3d claymation Shiba Inu",
+    ],
     car: [
       "neon lights, comic book",
       "Tesla driving on the Moon, planets in the background",
@@ -75,6 +78,7 @@
   $: currentOutputImageIndex = -1;
 
   $: isLoading = false;
+  let isInputImageLoading = false;
 
   $: brushSize = "sm";
   $: paint = "black"; // can be hex
@@ -121,6 +125,7 @@
     imgInput.onload = () => {
       resizeImage(imgInput);
       isImageUploaded = true;
+      isInputImageLoading = false;
 
       // kick off an inference on first image load so output image is populated as well
       // otherwise it will be empty
@@ -128,11 +133,11 @@
         generateOutputImage();
         firstImageGenerated = true;
       }
-
-      if (inputElement) {
-        inputElement.focus();
-      }
     };
+
+    if (inputElement) {
+      inputElement.focus();
+    }
 
     imgOutput.onload = () => {
       resizeImage(imgOutput);
@@ -141,13 +146,23 @@
   });
 
   const setImage = (src: string) => {
+    isInputImageLoading = true;
     imgInput.src = src;
 
     outputImageHistory.unshift(src);
     currentOutputImageIndex = 0;
 
-    // wait for onload before generating an image
-    setTimeout(generateOutputImage, 100);
+    const loopGenerate = () => {
+      if (isInputImageLoading) {
+        // wait for onload before generating an image
+        setTimeout(loopGenerate, 100);
+        return;
+      }
+
+      generateOutputImage();
+    };
+
+    loopGenerate();
   };
 
   const setPrompt = (prompt: string) => {
