@@ -35,29 +35,26 @@
     movePaintComponent = isSmallWindow;
   };
 
-  const defaultPromptByImage = {
-    abstract: "cityscape, studio ghibli, illustration",
-    beach:
-      "sci-fi scene from star wars, spaceships in the background, cinematic",
-    puppy: "cartoon bear, pixar, bright, happy",
-    car: "neon lights, comic book",
-  };
+
   const promptOptionsByImage: Record<string, string[]> = {
     abstract: [
+      "cityscape, studio ghibli, illustration",
       "a scene from Jodorowsky’s Dune, surreal, sandworm in the background",
       "lunar landing in the style of a van gogh painting",
     ],
     beach: [
+      "sci-fi scene from star wars, spaceships in the background, cinematic",
       "Mediterranean city, impressionist painting, purple tint",
       "coral reef in the style of Spongebob, cartoon, animated",
     ],
-    puppy: ["evil cybernetic wolf, watercolor", "3d claymation Shiba Inu"],
+    puppy: ["cartoon bear, pixar, bright, happy", "evil cybernetic wolf, watercolor", "3d claymation Shiba Inu"],
     car: [
+      "neon lights, comic book",
       "Tesla driving on the Moon, planets in the background",
       "futuristic car in cyberpunk cityscape, photorealistic",
     ],
   };
-  let value: string = defaultPromptByImage["abstract"];
+  let value: string = promptOptionsByImage["abstract"][0];
   $: currentImageName = "abstract";
   $: promptOptions = promptOptionsByImage[currentImageName];
 
@@ -389,7 +386,7 @@
             <button
               on:click={() => (currentImageName = "abstract")}
               on:click={() => setImage(abstractImage)}
-              on:click={() => (value = defaultPromptByImage["abstract"])}
+              on:click={() => (value = promptOptionsByImage["abstract"][0])}
             >
               <img
                 class="w-14 h-14 bg-gray"
@@ -401,7 +398,7 @@
             <button
               on:click={() => (currentImageName = "beach")}
               on:click={() => setImage(beachImage)}
-              on:click={() => (value = defaultPromptByImage["beach"])}
+              on:click={() => (value = promptOptionsByImage["beach"][0])}
             >
               <img
                 class="w-14 h-14 bg-gray"
@@ -413,7 +410,7 @@
             <button
               on:click={() => (currentImageName = "puppy")}
               on:click={() => setImage(puppyImage)}
-              on:click={() => (value = defaultPromptByImage["puppy"])}
+              on:click={() => (value = promptOptionsByImage["puppy"][0])}
             >
               <img
                 class="w-14 h-14 bg-gray"
@@ -425,7 +422,7 @@
             <button
               on:click={() => (currentImageName = "car")}
               on:click={() => setImage(carImage)}
-              on:click={() => (value = defaultPromptByImage["car"])}
+              on:click={() => (value = promptOptionsByImage["car"][0])}
             >
               <img
                 class="w-14 h-14 bg-gray"
