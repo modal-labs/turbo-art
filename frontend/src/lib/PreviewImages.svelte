@@ -1,11 +1,10 @@
 <script lang="ts">
     import carImage from "$lib/assets/car.png";
-    import beachImage from "$lib/assets/beach.png";
+    import valleyImage from "$lib/assets/valley.png";
     import puppyImage from "$lib/assets/puppy.png";
+    import pastaImage from "$lib/assets/pasta.png";
     import abstractImage from "$lib/assets/abstract.png";
-    import type { AlignVerticalSpaceAroundIcon } from "lucide-svelte";
 
-    export let currentImageName: string;
     export let promptOptionsByImage: Record<string, string[]>;
     export let imgInput: HTMLImageElement;
 
@@ -15,27 +14,15 @@
 </script>
 
 <button
-    on:click={() => setCurrentImage("abstract")}
-    on:click={() => setImage(abstractImage)}
-    on:click={() => setPrompt(promptOptionsByImage["abstract"][0])}
+    on:click={() => setCurrentImage("valley")}
+    on:click={() => setImage(valleyImage)}
+    on:click={() => setPrompt(promptOptionsByImage["valley"][0])}
 >
     <img
         class="w-14 h-14 bg-gray"
-        class:preview-active={imgInput?.src.includes(abstractImage)}
-        src={abstractImage}
-        alt="preview img abstract"
-    />
-</button>
-<button
-    on:click={() => setCurrentImage("beach")}
-    on:click={() => setImage(beachImage)}
-    on:click={() => setPrompt(promptOptionsByImage["beach"][0])}
->
-    <img
-        class="w-14 h-14 bg-gray"
-        class:preview-active={imgInput?.src.includes(beachImage)}
-        src={beachImage}
-        alt="preview img beach"
+        class:preview-active={imgInput?.src.includes(valleyImage)}
+        src={valleyImage}
+        alt="preview img"
     />
 </button>
 <button
@@ -60,5 +47,29 @@
         class:preview-active={imgInput?.src.includes(carImage)}
         src={carImage}
         alt="preview img car"
+    />
+</button>
+<button
+    on:click={() => setCurrentImage("abstract")}
+    on:click={() => setImage(abstractImage)}
+    on:click={() => setPrompt(promptOptionsByImage["abstract"][0])}
+>
+    <img
+        class="w-14 h-14 bg-gray"
+        class:preview-active={imgInput?.src.includes(abstractImage)}
+        src={abstractImage}
+        alt="preview img"
+    />
+</button>
+<button
+    on:click={() => setCurrentImage("pasta")}
+    on:click={() => setImage(pastaImage)}
+    on:click={() => setPrompt(promptOptionsByImage["pasta"][0])}
+>
+    <img
+        class="w-14 h-14 bg-gray"
+        class:preview-active={imgInput?.src.includes(pastaImage)}
+        src={pastaImage}
+        alt="preview img"
     />
 </button>

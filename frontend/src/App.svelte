@@ -18,7 +18,7 @@
   import modalLogoWithText from "$lib/assets/logotype.svg";
   import Paint from "$lib/Paint.svelte";
   import easterEggImage from "$lib/assets/mocha_outside.png";
-  import abstractImage from "$lib/assets/abstract.png";
+  import valleyImg from "$lib/assets/valley.png";
   import turboArtTitleGif from "$lib/assets/turbo-art-title.gif";
   import resolveConfig from "tailwindcss/resolveConfig";
   import tailwindConfig from "../tailwind.config.js";
@@ -39,11 +39,6 @@
       "a scene from Jodorowsky’s Dune, surreal, sandworm in the background",
       "lunar landing in the style of a van gogh painting",
     ],
-    beach: [
-      "sci-fi scene from star wars, spaceships in the background, cinematic",
-      "Mediterranean city, impressionist painting, purple tint",
-      "coral reef in the style of Spongebob, cartoon, animated",
-    ],
     puppy: [
       "cartoon bear, pixar, bright, happy",
       "evil cybernetic wolf, watercolor",
@@ -54,9 +49,19 @@
       "Tesla driving on the Moon, planets in the background",
       "futuristic car in cyberpunk cityscape, photorealistic",
     ],
+    valley: [
+      "cityscape, studio ghibli, illustration",
+      "Mediterranean city, impressionist painting, purple tint",
+      "coral reef in the style of Spongebob, cartoon, animated",
+    ],
+    pasta: [
+      "coral reef in the style of Spongebob, cartoon, animated",
+      "sci-fi scene from star wars, spaceships in the background, cinematic",
+      "italian food, cezanne painting",
+    ],
   };
-  let value: string = promptOptionsByImage["abstract"][0];
-  $: currentImageName = "abstract";
+  let value: string = promptOptionsByImage["valley"][0];
+  $: currentImageName = "valley";
   $: promptOptions = promptOptionsByImage[currentImageName];
 
   let imgInput: HTMLImageElement;
@@ -141,7 +146,7 @@
     imgOutput.onload = () => {
       resizeImage(imgOutput);
     };
-    setImage(abstractImage);
+    setImage(valleyImg);
   });
 
   const setImage = (src: string) => {
@@ -239,7 +244,7 @@
   }
 
   const throttledgenerateOutputImage = throttle(
-    500,
+    250,
     () => {
       generateOutputImage();
     },
@@ -384,7 +389,6 @@
       {#if isMobile}
         <div class="mt-3">
           <PreviewImages
-            {currentImageName}
             {promptOptionsByImage}
             {imgInput}
             {setImage}
@@ -399,7 +403,14 @@
       <div class="pr-7 sm:border-r border-white/10 flex flex-col sm:flex-row">
         <div>
           <div class="pb-3">
-            <div class="mb-2 font-medium">Canvas</div>
+            <div class="mb-2 font-medium flex gap-1 items-center">
+              Canvas
+              {#if isMobile}
+                {#if isLoading}
+                  <Loader size={14} class="animate-spin" />
+                {/if}
+              {/if}
+            </div>
             <div>Draw on the image to generate a new one</div>
           </div>
 
@@ -419,7 +430,6 @@
           {#if !isMobile}
             <div class="mt-3 flex gap-4">
               <PreviewImages
-                {currentImageName}
                 {promptOptionsByImage}
                 {imgInput}
                 {setImage}
