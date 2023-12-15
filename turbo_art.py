@@ -50,7 +50,7 @@ with inference_image.run_inside():
 @stub.cls(
     gpu="A100",
     image=inference_image,
-    keep_warm=1,
+    keep_warm=6,
     cloud="oci",  # remove this later
 )
 class Model:
