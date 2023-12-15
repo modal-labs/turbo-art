@@ -23,6 +23,18 @@
   import puppyImage from "$lib/assets/puppy.png";
   import abstractImage from "$lib/assets/abstract.png";
   import turboArtTitleGif from "$lib/assets/turbo-art-title.gif";
+  import resolveConfig from "tailwindcss/resolveConfig";
+  import tailwindConfig from "../tailwind.config.js";
+
+  const fullConfig = resolveConfig(tailwindConfig);
+  const breakpointSm = parseInt(fullConfig.theme.screens.sm);
+  $: movePaintComponent = false;
+
+  const handleWindowResize = () => {
+    const isSmallWindow = window.innerWidth <= breakpointSm;
+    console.log(isSmallWindow);
+    movePaintComponent = isSmallWindow;
+  };
 
   let value: string = "cityscape, studio ghibli, illustration";
   let imgInput: HTMLImageElement;
@@ -59,6 +71,8 @@
   };
 
   onMount(() => {
+    handleWindowResize();
+
     /* 
       Setup paper.js for canvas which is a layer above our input image.
       Paper is used for drawing/paint functionality.
@@ -184,11 +198,11 @@
   }
 
   const throttledgenerateOutputImage = throttle(
-    250,
+    500,
     () => {
       generateOutputImage();
     },
-    { noLoading: false, noTrailing: false }
+    { noLoading: false, noTrailing: false },
   );
 
   const debouncedgenerateOutputImage = debounce(
@@ -196,7 +210,7 @@
     () => {
       generateOutputImage();
     },
-    { atBegin: false }
+    { atBegin: false },
   );
 
   const movetoCanvas = () => {
@@ -236,7 +250,7 @@
 
   const generateOutputImage = async (
     useOutputImage: boolean = false,
-    iterations: number = 2
+    iterations: number = 2,
   ) => {
     isLoading = true;
     const data = await getImageData(useOutputImage);
@@ -274,6 +288,7 @@
   };
 </script>
 
+<svelte:window on:resize={handleWindowResize} />
 <BackgroundGradient />
 <main class="flex flex-col items-center sm:pt-12">
   <div class="container">
@@ -404,19 +419,21 @@
           </div>
         </div>
 
-        <div class="sm:ml-6 mt-3 sm:mt-[68px]">
-          <Paint
-            {paint}
-            {brushSize}
-            on:clearCanvas={() => {
-              paper.project.activeLayer.removeChildren();
-              paper.view.update();
-              generateOutputImage();
-            }}
-            on:setPaint={setPaint}
-            on:setBrushSize={setBrushSize}
-          />
-        </div>
+        {#if !movePaintComponent}
+          <div class="sm:ml-6 mt-3 sm:mt-[68px]">
+            <Paint
+              {paint}
+              {brushSize}
+              on:clearCanvas={() => {
+                paper.project.activeLayer.removeChildren();
+                paper.view.update();
+                generateOutputImage();
+              }}
+              on:setPaint={setPaint}
+              on:setBrushSize={setBrushSize}
+            />
+          </div>
+        {/if}
       </div>
 
       <div class="sm:pl-7 flex flex-col sm:flex-row">
@@ -438,7 +455,23 @@
             class:hidden={!firstImageGenerated}
           />
         </div>
+
         <div class="flex sm:justify-between sm:ml-6">
+          {#if movePaintComponent}
+            <div class="mr-6 mt-3">
+              <Paint
+                {paint}
+                {brushSize}
+                on:clearCanvas={() => {
+                  paper.project.activeLayer.removeChildren();
+                  paper.view.update();
+                  generateOutputImage();
+                }}
+                on:setPaint={setPaint}
+                on:setBrushSize={setBrushSize}
+              />
+            </div>
+          {/if}
           <div class="flex flex-col gap-4 mt-3 sm:mt-[68px]">
             <div class="btns-container justify-space-between">
               <button class="text-xs flex gap-1.5" on:click={undoOutputImage}>
