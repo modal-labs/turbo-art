@@ -50,7 +50,8 @@ with inference_image.run_inside():
 @stub.cls(
     gpu="A100",
     image=inference_image,
-    container_idle_timeout=240,
+    keep_warm=1,
+    cloud="oci",  # remove this later
 )
 class Model:
     def __enter__(self):
@@ -117,7 +118,9 @@ static_path = base_path.joinpath("frontend", "dist")
 @stub.function(
     mounts=[Mount.from_local_dir(static_path, remote_path="/assets")],
     image=web_image,
-    allow_concurrent_inputs=10,
+    keep_warm=1,
+    allow_concurrent_inputs=30,
+    custom_domains=["turbo.art"],
 )
 @asgi_app()
 def fastapi_app():
