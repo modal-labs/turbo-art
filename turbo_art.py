@@ -118,7 +118,7 @@ static_path = base_path.joinpath("frontend", "dist")
 @stub.function(
     mounts=[Mount.from_local_dir(static_path, remote_path="/assets")],
     image=web_image,
-    keep_warm=1,
+    keep_warm=6,
     allow_concurrent_inputs=30,
 )
 @asgi_app(custom_domains=["turbo.art"])
