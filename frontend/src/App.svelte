@@ -369,22 +369,24 @@
     </div>
 
     <div class="mt-3">
-      <h3 class="mb-3 font-semibold">Prompt</h3>
-      <div class="flex flex-col sm:flex-row gap-2">
-        {#each promptOptions as item}
-          <button
-            class="btns-container text-xs py-0.5 px-2"
-            style="width:fit-content"
-            on:click={() => setPrompt(item)}>{item}</button
-          >
-        {/each}
-      </div>
-      <input
-        class="rounded-lg border border-white/20 bg-white/10 py-4 px-6 outline-none w-full mt-3"
-        bind:value
-        bind:this={inputElement}
-        on:input={debouncedgenerateOutputImage}
-      />
+      {#if !isMobile}
+        <h3 class="mb-3 font-semibold">Prompt</h3>
+        <div class="flex flex-col sm:flex-row gap-2">
+          {#each promptOptions as item}
+            <button
+              class="btns-container text-xs py-0.5 px-2"
+              style="width:fit-content"
+              on:click={() => setPrompt(item)}>{item}</button
+            >
+          {/each}
+        </div>
+        <input
+          class="rounded-lg border border-white/20 bg-white/10 py-4 px-6 outline-none w-full mt-3"
+          bind:value
+          bind:this={inputElement}
+          on:input={debouncedgenerateOutputImage}
+        />
+      {/if}
 
       {#if isMobile}
         <div class="mt-3">
@@ -479,6 +481,26 @@
           />
         </div>
 
+        {#if isMobile}
+          <div class="mt-3">
+            <h3 class="mb-3 font-semibold">Prompt</h3>
+            <div class="flex flex-col sm:flex-row gap-2">
+              {#each promptOptions as item}
+                <button
+                  class="btns-container text-xs py-0.5 px-2"
+                  style="width:fit-content"
+                  on:click={() => setPrompt(item)}>{item}</button
+                >
+              {/each}
+            </div>
+            <input
+              class="rounded-lg border border-white/20 bg-white/10 py-4 px-6 outline-none w-full mt-3"
+              bind:value
+              bind:this={inputElement}
+              on:input={debouncedgenerateOutputImage}
+            />
+          </div>
+        {/if}
         <div class="flex sm:justify-between sm:ml-6">
           {#if isMobile}
             <div class="mt-3 mr-3">
