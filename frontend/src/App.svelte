@@ -196,7 +196,6 @@
 
   function loadImage(e: Event) {
     const target = e.target as HTMLInputElement;
-    console.log(target);
     if (!target || !target.files) return;
     const file = target.files[0];
 
