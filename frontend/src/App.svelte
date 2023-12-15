@@ -18,21 +18,19 @@
   import modalLogoWithText from "$lib/assets/logotype.svg";
   import Paint from "$lib/Paint.svelte";
   import easterEggImage from "$lib/assets/mocha_outside.png";
-  import carImage from "$lib/assets/car.png";
-  import beachImage from "$lib/assets/beach.png";
-  import puppyImage from "$lib/assets/puppy.png";
   import abstractImage from "$lib/assets/abstract.png";
   import turboArtTitleGif from "$lib/assets/turbo-art-title.gif";
   import resolveConfig from "tailwindcss/resolveConfig";
   import tailwindConfig from "../tailwind.config.js";
+  import PreviewImages from "$lib/PreviewImages.svelte";
 
   const fullConfig = resolveConfig(tailwindConfig);
   const breakpointSm = parseInt(fullConfig.theme.screens.sm);
-  $: movePaintComponent = false;
+  $: isMobile = false;
 
   const handleWindowResize = () => {
     const isSmallWindow = window.innerWidth <= breakpointSm;
-    movePaintComponent = isSmallWindow;
+    isMobile = isSmallWindow;
   };
 
   const promptOptionsByImage: Record<string, string[]> = {
@@ -65,6 +63,7 @@
   let imgOutput: HTMLImageElement;
   let canvasDrawLayer: HTMLCanvasElement;
   let inputElement: HTMLInputElement;
+  let fileInput: HTMLInputElement;
 
   let isImageUploaded = false;
   let firstImageGenerated = false;
@@ -192,6 +191,7 @@
 
   function loadImage(e: Event) {
     const target = e.target as HTMLInputElement;
+    console.log(target);
     if (!target || !target.files) return;
     const file = target.files[0];
 
@@ -289,6 +289,12 @@
     }
   };
 
+  const resetInput = () => {
+    if (fileInput) {
+      fileInput.value = "";
+    }
+  };
+
   const generateOutputImage = async (
     useOutputImage: boolean = false,
     iterations: number = 2,
@@ -374,6 +380,19 @@
         bind:this={inputElement}
         on:input={debouncedgenerateOutputImage}
       />
+
+      {#if isMobile}
+        <div class="mt-3">
+          <PreviewImages
+            {currentImageName}
+            {promptOptionsByImage}
+            {imgInput}
+            {setImage}
+            setCurrentImage={(name) => (currentImageName = name)}
+            setPrompt={(v) => (value = v)}
+          />
+        </div>
+      {/if}
     </div>
 
     <div class="mt-3 flex flex-col sm:flex-row">
@@ -397,59 +416,21 @@
             class="w-[320px] h-[320px] z-1"
           />
 
-          <div class="mt-3 flex gap-4">
-            <button
-              on:click={() => (currentImageName = "abstract")}
-              on:click={() => setImage(abstractImage)}
-              on:click={() => (value = promptOptionsByImage["abstract"][0])}
-            >
-              <img
-                class="w-14 h-14 bg-gray"
-                class:preview-active={imgInput?.src.includes(abstractImage)}
-                src={abstractImage}
-                alt="preview img abstract"
+          {#if !isMobile}
+            <div class="mt-3 flex gap-4">
+              <PreviewImages
+                {currentImageName}
+                {promptOptionsByImage}
+                {imgInput}
+                {setImage}
+                setCurrentImage={(name) => (currentImageName = name)}
+                setPrompt={(v) => (value = v)}
               />
-            </button>
-            <button
-              on:click={() => (currentImageName = "beach")}
-              on:click={() => setImage(beachImage)}
-              on:click={() => (value = promptOptionsByImage["beach"][0])}
-            >
-              <img
-                class="w-14 h-14 bg-gray"
-                class:preview-active={imgInput?.src.includes(beachImage)}
-                src={beachImage}
-                alt="preview img beach"
-              />
-            </button>
-            <button
-              on:click={() => (currentImageName = "puppy")}
-              on:click={() => setImage(puppyImage)}
-              on:click={() => (value = promptOptionsByImage["puppy"][0])}
-            >
-              <img
-                class="w-14 h-14 bg-gray"
-                class:preview-active={imgInput?.src.includes(puppyImage)}
-                src={puppyImage}
-                alt="preview img puppy"
-              />
-            </button>
-            <button
-              on:click={() => (currentImageName = "car")}
-              on:click={() => setImage(carImage)}
-              on:click={() => (value = promptOptionsByImage["car"][0])}
-            >
-              <img
-                class="w-14 h-14 bg-gray"
-                class:preview-active={imgInput?.src.includes(carImage)}
-                src={carImage}
-                alt="preview img car"
-              />
-            </button>
-          </div>
+            </div>
+          {/if}
         </div>
 
-        {#if !movePaintComponent}
+        {#if !isMobile}
           <div class="sm:ml-6 mt-3 sm:mt-[68px]">
             <Paint
               {paint}
@@ -468,18 +449,20 @@
 
       <div class="sm:pl-7 flex flex-col sm:flex-row">
         <div>
-          <div class="pb-3">
-            <div class="mb-2 flex items-center gap-1 font-medium">
-              Output
-              {#if isLoading}
-                <Loader size={14} class="animate-spin" />
-              {/if}
+          {#if !isMobile}
+            <div class="pb-3">
+              <div class="mb-2 flex items-center gap-1 font-medium">
+                Output
+                {#if isLoading}
+                  <Loader size={14} class="animate-spin" />
+                {/if}
+              </div>
+              <div>Generated Image (iterations: {numIterations})</div>
             </div>
-            <div>Generated Image (iterations: {numIterations})</div>
-          </div>
+          {/if}
 
           <img
-            alt="output"
+            alt="loading..."
             bind:this={imgOutput}
             class="w-[320px] h-[320px] bg-[#D9D9D9]"
             class:hidden={!firstImageGenerated}
@@ -487,7 +470,7 @@
         </div>
 
         <div class="flex sm:justify-between sm:ml-6">
-          {#if movePaintComponent}
+          {#if isMobile}
             <div class="mt-3 mr-3">
               <Paint
                 {paint}
@@ -535,7 +518,9 @@
         accept="image/*"
         id="file-upload"
         hidden
+        bind:this={fileInput}
         on:change={loadImage}
+        on:click={resetInput}
       />
       <label
         for="file-upload"
