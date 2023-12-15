@@ -1,6 +1,6 @@
 # turbo.art
 
-A playground for creative exploration that uses SDXL Turbo for real-time image editing. Try it now at [https://turbo.art](https://turbo.art)!
+A playground for creative exploration that uses [SDXL Turbo](https://huggingface.co/stabilityai/sdxl-turbo) for real-time image editing. Try it now at [https://turbo.art](https://turbo.art)!
 
 ![turbo-art](https://github.com/modal-labs/turbo-art/assets/5786378/bb185f24-9946-4c26-a7ca-7c8732ea77f0)
 

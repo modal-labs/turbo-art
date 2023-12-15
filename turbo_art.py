@@ -48,10 +48,9 @@ with inference_image.run_inside():
 
 
 @stub.cls(
-    gpu=gpu.A100(memory=40),
+    gpu="A100",
     image=inference_image,
-    keep_warm=1,
-    cloud="oci",  # remove this later
+    container_idle_timeout=240,
 )
 class Model:
     def __enter__(self):
@@ -118,7 +117,6 @@ static_path = base_path.joinpath("frontend", "dist")
 @stub.function(
     mounts=[Mount.from_local_dir(static_path, remote_path="/assets")],
     image=web_image,
-    keep_warm=1,
     allow_concurrent_inputs=10,
 )
 @asgi_app()
