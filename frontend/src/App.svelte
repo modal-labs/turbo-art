@@ -18,19 +18,14 @@
   import modalLogoWithText from "$lib/assets/logotype.svg";
   import Paint from "$lib/Paint.svelte";
   import easterEggImage from "$lib/assets/mocha_outside.png";
-  import carImage from "$lib/assets/car.png";
-  import beachImage from "$lib/assets/beach.png";
-  import puppyImage from "$lib/assets/puppy.png";
   import abstractImage from "$lib/assets/abstract.png";
   import turboArtTitleGif from "$lib/assets/turbo-art-title.gif";
   import resolveConfig from "tailwindcss/resolveConfig";
   import tailwindConfig from "../tailwind.config.js";
+  import PreviewImages from "$lib/PreviewImages.svelte";
 
   const fullConfig = resolveConfig(tailwindConfig);
   const breakpointSm = parseInt(fullConfig.theme.screens.sm);
-  // on mobile we only have one image showing and show updates there
-  // so we need to track this and check this in spots where we generate
-  // using the output image
   $: isMobile = false;
 
   const handleWindowResize = () => {
@@ -68,6 +63,7 @@
   let imgOutput: HTMLImageElement;
   let canvasDrawLayer: HTMLCanvasElement;
   let inputElement: HTMLInputElement;
+  let fileInput: HTMLInputElement;
 
   let isImageUploaded = false;
   let firstImageGenerated = false;
@@ -195,6 +191,7 @@
 
   function loadImage(e: Event) {
     const target = e.target as HTMLInputElement;
+    console.log(target);
     if (!target || !target.files) return;
     const file = target.files[0];
 
@@ -292,14 +289,17 @@
     }
   };
 
+  const resetInput = () => {
+    if (fileInput) {
+      fileInput.value = "";
+    }
+  };
+
   const generateOutputImage = async (
     useOutputImage: boolean = false,
     iterations: number = 2,
   ) => {
     isLoading = true;
-    if (isMobile) {
-      useOutputImage = false;
-    }
     const data = await getImageData(useOutputImage);
 
     const formData = new FormData();
@@ -320,13 +320,7 @@
           if (outputImageHistory.length > 10) {
             outputImageHistory = outputImageHistory.slice(0, 10);
           }
-
-          if (isMobile) {
-            imgInput.src = imageURL;
-          } else {
-            imgOutput.src = imageURL;
-          }
-
+          imgOutput.src = imageURL;
           if (useOutputImage) {
             numIterations += iterations;
           } else {
@@ -386,18 +380,26 @@
         bind:this={inputElement}
         on:input={debouncedgenerateOutputImage}
       />
+
+      {#if isMobile}
+        <div class="mt-3">
+          <PreviewImages
+            {currentImageName}
+            {promptOptionsByImage}
+            {imgInput}
+            {setImage}
+            setCurrentImage={(name) => (currentImageName = name)}
+            setPrompt={(v) => (value = v)}
+          />
+        </div>
+      {/if}
     </div>
 
     <div class="mt-3 flex flex-col sm:flex-row">
       <div class="pr-7 sm:border-r border-white/10 flex flex-col sm:flex-row">
         <div>
           <div class="pb-3">
-            <div class="mb-2 font-medium gap-1 flex items-center">
-              Canvas
-              {#if isLoading && isMobile}
-                <Loader size={14} class="animate-spin" />
-              {/if}
-            </div>
+            <div class="mb-2 font-medium">Canvas</div>
             <div>Draw on the image to generate a new one</div>
           </div>
 
@@ -414,56 +416,18 @@
             class="w-[320px] h-[320px] z-1"
           />
 
-          <div class="mt-3 flex gap-4">
-            <button
-              on:click={() => (currentImageName = "abstract")}
-              on:click={() => setImage(abstractImage)}
-              on:click={() => (value = promptOptionsByImage["abstract"][0])}
-            >
-              <img
-                class="w-14 h-14 bg-gray"
-                class:preview-active={imgInput?.src.includes(abstractImage)}
-                src={abstractImage}
-                alt="preview img abstract"
+          {#if !isMobile}
+            <div class="mt-3 flex gap-4">
+              <PreviewImages
+                {currentImageName}
+                {promptOptionsByImage}
+                {imgInput}
+                {setImage}
+                setCurrentImage={(name) => (currentImageName = name)}
+                setPrompt={(v) => (value = v)}
               />
-            </button>
-            <button
-              on:click={() => (currentImageName = "beach")}
-              on:click={() => setImage(beachImage)}
-              on:click={() => (value = promptOptionsByImage["beach"][0])}
-            >
-              <img
-                class="w-14 h-14 bg-gray"
-                class:preview-active={imgInput?.src.includes(beachImage)}
-                src={beachImage}
-                alt="preview img beach"
-              />
-            </button>
-            <button
-              on:click={() => (currentImageName = "puppy")}
-              on:click={() => setImage(puppyImage)}
-              on:click={() => (value = promptOptionsByImage["puppy"][0])}
-            >
-              <img
-                class="w-14 h-14 bg-gray"
-                class:preview-active={imgInput?.src.includes(puppyImage)}
-                src={puppyImage}
-                alt="preview img puppy"
-              />
-            </button>
-            <button
-              on:click={() => (currentImageName = "car")}
-              on:click={() => setImage(carImage)}
-              on:click={() => (value = promptOptionsByImage["car"][0])}
-            >
-              <img
-                class="w-14 h-14 bg-gray"
-                class:preview-active={imgInput?.src.includes(carImage)}
-                src={carImage}
-                alt="preview img car"
-              />
-            </button>
-          </div>
+            </div>
+          {/if}
         </div>
 
         {#if !isMobile}
@@ -484,8 +448,8 @@
       </div>
 
       <div class="sm:pl-7 flex flex-col sm:flex-row">
-        {#if !isMobile}
-          <div>
+        <div>
+          {#if !isMobile}
             <div class="pb-3">
               <div class="mb-2 flex items-center gap-1 font-medium">
                 Output
@@ -495,15 +459,15 @@
               </div>
               <div>Generated Image (iterations: {numIterations})</div>
             </div>
+          {/if}
 
-            <img
-              alt="output"
-              bind:this={imgOutput}
-              class="w-[320px] h-[320px] bg-[#D9D9D9]"
-              class:hidden={!firstImageGenerated}
-            />
-          </div>
-        {/if}
+          <img
+            alt="loading..."
+            bind:this={imgOutput}
+            class="w-[320px] h-[320px] bg-[#D9D9D9]"
+            class:hidden={!firstImageGenerated}
+          />
+        </div>
 
         <div class="flex sm:justify-between sm:ml-6">
           {#if isMobile}
@@ -537,11 +501,9 @@
             >
               <Sparkle size={16} />Enhance
             </button>
-            {#if !isMobile}
-              <button class="text-xs btns-container" on:click={movetoCanvas}>
-                <ArrowLeftSquare size={16} />Move to Canvas
-              </button>
-            {/if}
+            <button class="text-xs btns-container" on:click={movetoCanvas}>
+              <ArrowLeftSquare size={16} />Move to Canvas
+            </button>
 
             <button class="text-xs btns-container" on:click={downloadImage}>
               <ArrowDownToLine size={16} /> Download
@@ -556,7 +518,9 @@
         accept="image/*"
         id="file-upload"
         hidden
+        bind:this={fileInput}
         on:change={loadImage}
+        on:click={resetInput}
       />
       <label
         for="file-upload"
