@@ -126,28 +126,26 @@
       throttledgenerateOutputImage();
     };
 
-    imgInput.onload = () => {
-      resizeImage(imgInput);
-      isImageUploaded = true;
-      isInputImageLoading = false;
-
-      // kick off an inference on first image load so output image is populated as well
-      // otherwise it will be empty
-      if (!firstImageGenerated) {
-        generateOutputImage();
-        firstImageGenerated = true;
-      }
-    };
-
     if (inputElement) {
       inputElement.focus();
     }
 
-    imgOutput.onload = () => {
-      resizeImage(imgOutput);
-    };
     setImage(valleyImg);
   });
+
+  const onLoadInputImg = (event: Event) => {
+    resizeImage(event);
+
+    isImageUploaded = true;
+    isInputImageLoading = false;
+
+    // kick off an inference on first image load so output image is populated as well
+    // otherwise it will be empty
+    if (!firstImageGenerated) {
+      generateOutputImage();
+      firstImageGenerated = true;
+    }
+  };
 
   const setImage = (src: string) => {
     isInputImageLoading = true;
@@ -177,26 +175,27 @@
   // Our images need to be sized 320x320 for both input and output
   // This is important because we combine the canvas layer with the image layer
   // so the pixels need to matchup.
-  const resizeImage = (img: HTMLImageElement) => {
+  const resizeImage = (event: Event) => {
+    const target = event.target as HTMLImageElement;
+
     let newWidth;
     let newHeight;
-    if (img.width > img.height) {
-      const aspectRatio = img.height / img.width;
+    if (target.naturalWidth > target.naturalHeight) {
+      const aspectRatio = target.naturalHeight / target.naturalWidth;
       newWidth = 320;
       newHeight = newWidth * aspectRatio;
     } else {
-      const aspectRatio = img.width / img.height;
+      const aspectRatio = target.naturalWidth / target.naturalHeight;
       newHeight = 320;
       newWidth = newHeight * aspectRatio;
     }
 
-    img.style.width = `${newWidth}px`;
-    img.style.height = `${newHeight}px`;
+    target.style.height = `${newHeight}px`;
+    target.style.width = `${newWidth}px`;
   };
 
   function loadImage(e: Event) {
     const target = e.target as HTMLInputElement;
-    console.log(target);
     if (!target || !target.files) return;
     const file = target.files[0];
 
@@ -419,8 +418,9 @@
           <img
             alt="input"
             bind:this={imgInput}
-            class="absolute w-[320px] h-[320px] bg-[#D9D9D9] pointer-events-none z-[-1]"
+            class="absolute bg-[#D9D9D9] pointer-events-none z-[-1]"
             class:hidden={!isImageUploaded}
+            on:load={onLoadInputImg}
           />
           <canvas
             bind:this={canvasDrawLayer}
@@ -443,7 +443,7 @@
         </div>
 
         {#if !isMobile}
-          <div class="sm:ml-6 mt-3 sm:mt-[68px]">
+          <div class="sm:ml-3 mt-3 sm:mt-[68px]">
             <Paint
               {paint}
               {brushSize}
@@ -478,6 +478,7 @@
             bind:this={imgOutput}
             class="w-[320px] h-[320px] bg-[#D9D9D9]"
             class:hidden={!firstImageGenerated}
+            on:load={resizeImage}
           />
         </div>
 
