@@ -38,7 +38,7 @@ inference_image = (
     .run_function(download_models)
 )
 
-with inference_image.run_inside():
+with inference_image.imports():
     from io import BytesIO
 
     import torch
