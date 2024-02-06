@@ -48,7 +48,7 @@ with inference_image.run_inside():
 
 
 @stub.cls(
-    gpu="A100",
+    gpu="H100",
     image=inference_image,
     keep_warm=2,
     cloud="oci",  # remove this later
