@@ -48,7 +48,7 @@ with inference_image.imports():
 
 
 @stub.cls(
-    gpu="H100",
+    gpu="A100",
     image=inference_image,
     keep_warm=2,
 )
