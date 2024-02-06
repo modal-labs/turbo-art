@@ -38,7 +38,7 @@ inference_image = (
     .run_function(download_models)
 )
 
-with inference_image.run_inside():
+with inference_image.imports():
     from io import BytesIO
 
     import torch
@@ -51,7 +51,6 @@ with inference_image.run_inside():
     gpu="H100",
     image=inference_image,
     keep_warm=2,
-    cloud="oci",  # remove this later
 )
 class Model:
     def __enter__(self):
