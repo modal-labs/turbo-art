@@ -51,6 +51,7 @@ with inference_image.imports():
     gpu="A100",
     image=inference_image,
     container_idle_timeout=240,
+    concurrency_limit=10,
 )
 class Model:
     def __enter__(self):
