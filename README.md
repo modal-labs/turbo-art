@@ -47,6 +47,8 @@ In the terminal output, you'll find a URL that you can visit to use your app. Wh
 
 ### Deploy
 
+For modal-labs workspace ensure you're on the `deploy` branch of this Git repo and that you're deploying to environment `main`.
+
 Once you're happy with your changes, [deploy](https://modal.com/docs/guide/managing-deployments#creating-deployments) your app:
 
 ```shell
