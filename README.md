@@ -50,6 +50,7 @@ In the terminal output, you'll find a URL that you can visit to use your app. Wh
 Once you're happy with your changes, [deploy](https://modal.com/docs/guide/managing-deployments#creating-deployments) your app:
 
 ```shell
+npx vite build
 modal deploy turbo_art.py
 ```
 
