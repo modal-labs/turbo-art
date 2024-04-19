@@ -34,6 +34,7 @@ inference_image = (
         "transformers~=4.35",
         "accelerate~=0.25",
         "safetensors~=0.4",
+        "python-multipart==0.0.9",
     )
     .run_function(download_models)
 )
