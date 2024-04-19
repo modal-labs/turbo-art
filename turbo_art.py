@@ -123,6 +123,8 @@ static_path = base_path.joinpath("frontend", "dist")
     mounts=[Mount.from_local_dir(static_path, remote_path="/assets")],
     image=web_image,
     allow_concurrent_inputs=10,
+    _experimental_boost=True,
+    keep_warm=4,
 )
 @asgi_app()
 def fastapi_app():
