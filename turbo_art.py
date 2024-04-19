@@ -52,6 +52,9 @@ with inference_image.imports():
     image=inference_image,
     container_idle_timeout=240,
     concurrency_limit=10,
+    timeout=10,
+    _experimental_boost=True,
+    keep_warm=1,
 )
 class Model:
     def __enter__(self):
