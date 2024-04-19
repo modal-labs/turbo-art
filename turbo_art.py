@@ -127,7 +127,7 @@ static_path = base_path.joinpath("frontend", "dist")
     _experimental_boost=True,
     keep_warm=4,
 )
-@asgi_app()
+@asgi_app(custom_domains=["turbo.art"])
 def fastapi_app():
     web_app = FastAPI()
     from jinja2 import Template
@@ -138,7 +138,7 @@ def fastapi_app():
     template = Template(template_html)
 
     with open("/assets/index.html", "w") as f:
-        html = template.render(inference_url="turbo-art.modal.wtf")
+        html = template.render(inference_url="https://turbo-art.modal.wtf")
         f.write(html)
 
     web_app.mount("/", StaticFiles(directory="/assets", html=True))
