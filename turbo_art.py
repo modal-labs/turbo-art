@@ -2,7 +2,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
-from modal import Image, Mount, Stub, asgi_app, gpu, web_endpoint
+from modal import Image, Mount, Stub, asgi_app, web_endpoint, enter
 
 
 def download_models():
@@ -53,12 +53,13 @@ with inference_image.imports():
     image=inference_image,
     container_idle_timeout=240,
     concurrency_limit=10,
-    timeout=10,
+    timeout=60,
     _experimental_boost=True,
     keep_warm=1,
 )
 class Model:
-    def __enter__(self):
+    @enter()
+    def load_model(self):
         self.pipe = AutoPipelineForImage2Image.from_pretrained(
             "stabilityai/sdxl-turbo",
             torch_dtype=torch.float16,
@@ -82,7 +83,7 @@ class Model:
             seed=42,
         )
 
-    @web_endpoint(method="POST")
+    @web_endpoint(method="POST", custom_domains=["turbo-art.modal.wtf"])
     async def inference(
         self,
         image: UploadFile = File(...),
@@ -137,7 +138,7 @@ def fastapi_app():
     template = Template(template_html)
 
     with open("/assets/index.html", "w") as f:
-        html = template.render(inference_url=Model.inference.web_url)
+        html = template.render(inference_url="turbo-art.modal.wtf")
         f.write(html)
 
     web_app.mount("/", StaticFiles(directory="/assets", html=True))
