@@ -29,10 +29,12 @@ with inference_image.imports():
 
 
 @app.cls(
-    gpu="A100",
+    gpu=["a100", "h100"],
     image=inference_image,
     container_idle_timeout=240,
-    concurrency_limit=10,
+    concurrency_limit=100,
+    timeout=60,
+    keep_warm=1,
 )
 class Model:
     @build()
@@ -57,12 +59,12 @@ class Model:
         self.pipe = AutoPipelineForImage2Image.from_pretrained(
             "stabilityai/sdxl-turbo",
             torch_dtype=torch.float16,
-            device_map="auto",
+            device_map="balanced",
             variant="fp16",
             vae=AutoencoderKL.from_pretrained(
                 "madebyollin/sdxl-vae-fp16-fix",
                 torch_dtype=torch.float16,
-                device_map="auto",
+                device_map="balanced",
             ),
         )
 
@@ -77,7 +79,7 @@ class Model:
             seed=42,
         )
 
-    @web_endpoint(method="POST")
+    @web_endpoint(method="POST", label="turbo-art-backend")
     async def inference(
         self,
         image: UploadFile = File(...),
@@ -113,13 +115,13 @@ class Model:
 base_path = Path(__file__).parent
 static_path = base_path.joinpath("frontend", "dist")
 
-
 @app.function(
     mounts=[Mount.from_local_dir(static_path, remote_path="/assets")],
     image=web_image,
     allow_concurrent_inputs=10,
+    keep_warm=4,
 )
-@asgi_app()
+@asgi_app(custom_domains=["turbo.art"])
 def fastapi_app():
     web_app = FastAPI()
     from jinja2 import Template
