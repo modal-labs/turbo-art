@@ -52,9 +52,8 @@ with inference_image.imports():
     gpu="A100",
     image=inference_image,
     container_idle_timeout=240,
-    concurrency_limit=10,
+    concurrency_limit=100,
     timeout=60,
-    _experimental_boost=True,
     keep_warm=1,
 )
 class Model:
@@ -63,12 +62,12 @@ class Model:
         self.pipe = AutoPipelineForImage2Image.from_pretrained(
             "stabilityai/sdxl-turbo",
             torch_dtype=torch.float16,
-            device_map="auto",
+            device_map="balanced",
             variant="fp16",
             vae=AutoencoderKL.from_pretrained(
                 "madebyollin/sdxl-vae-fp16-fix",
                 torch_dtype=torch.float16,
-                device_map="auto",
+                device_map="balanced",
             ),
         )
 
@@ -83,7 +82,7 @@ class Model:
             seed=42,
         )
 
-    @web_endpoint(method="POST", custom_domains=["turbo-art.modal.wtf"])
+    @web_endpoint(method="POST", label="turbo-art-backend")
     async def inference(
         self,
         image: UploadFile = File(...),
@@ -124,7 +123,6 @@ static_path = base_path.joinpath("frontend", "dist")
     mounts=[Mount.from_local_dir(static_path, remote_path="/assets")],
     image=web_image,
     allow_concurrent_inputs=10,
-    _experimental_boost=True,
     keep_warm=4,
 )
 @asgi_app(custom_domains=["turbo.art"])
@@ -138,7 +136,7 @@ def fastapi_app():
     template = Template(template_html)
 
     with open("/assets/index.html", "w") as f:
-        html = template.render(inference_url="https://turbo-art.modal.wtf")
+        html = template.render(inference_url="https://gongy--turbo-art-backend.modal.run")
         f.write(html)
 
     web_app.mount("/", StaticFiles(directory="/assets", html=True))
