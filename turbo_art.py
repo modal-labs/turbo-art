@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, Response, UploadFile
+from fastapi import FastAPI, File, Form, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from modal import Image, Mount, App, asgi_app, build, enter, gpu, web_endpoint
 
 app = App("stable-diffusion-xl-turbo")
@@ -122,16 +123,17 @@ static_path = base_path.joinpath("frontend", "dist")
 @asgi_app()
 def fastapi_app():
     web_app = FastAPI()
-    from jinja2 import Template
+    templates = Jinja2Templates(directory="/assets")
 
-    with open("/assets/index.html", "r") as f:
-        template_html = f.read()
-
-    template = Template(template_html)
-
-    with open("/assets/index.html", "w") as f:
-        html = template.render(inference_url=Model.inference.web_url)
-        f.write(html)
+    @web_app.get("/")
+    async def read_root(request: Request):
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "inference_url": Model.inference.web_url,
+            },
+        )
 
     web_app.mount("/", StaticFiles(directory="/assets", html=True))
 
