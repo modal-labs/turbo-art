@@ -334,6 +334,8 @@
         <div class="flex items-center justify-between">
           <img width={175} src={turboArtTitleGif} alt="Turbo.Art" />
           <a
+            target="_blank"
+            rel="noopener noreferrer"
             href="https://github.com/modal-labs/turbo-art/tree/main"
             class="btns-container justify-center font-medium"
           >
@@ -342,6 +344,8 @@
         </div>
         <div class="text-sm">
           The image generation is powered by Stability's <a
+            target="_blank"
+            rel="noopener noreferrer"
             class="underline"
             href="https://stability.ai/news/stability-ai-sdxl-turbo"
             >SDXL Turbo</a
@@ -434,7 +438,7 @@
           >
             <div class="flex items-center gap-2 font-medium">
               <Upload size={16} />
-              Upload Image (PNG, JPEG)
+              Upload Image (JPG, PNG)
             </div>
           </label>
         </div>
@@ -507,7 +511,12 @@
           src={modalLogoWithText}
         />
       </div>
-      <a href="https://modal.com" class="button px-5 py-[6px] font-medium">
+      <a
+        target="_blank"
+        rel="noopener noreferrer"
+        href="https://modal.com"
+        class="button px-5 py-[6px] font-medium"
+      >
         Get Started <ArrowUpRight size={16} />
       </a>
     </div>
@@ -537,7 +546,7 @@
   }
 
   :global(.tools-container) {
-    @apply flex gap-2.5 py-2 px-3 border rounded-[10px] border-light-green/10 bg-light-green/10 w-fit;
+    @apply flex gap-2.5 py-2 px-3 border rounded-[10px] border-light-green/5 bg-light-green/10 w-fit;
   }
   .tools-container,
   .tools-container-sm {

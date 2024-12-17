@@ -6,7 +6,7 @@ from modal import Image, Mount, App, asgi_app, build, enter, gpu, web_endpoint
 
 app = App("stable-diffusion-xl-turbo")
 
-web_image = Image.debian_slim().pip_install("jinja2")
+web_image = Image.debian_slim().pip_install("jinja2", "fastapi[standard]")
 
 inference_image = Image.debian_slim().pip_install(
     "Pillow~=10.1.0",

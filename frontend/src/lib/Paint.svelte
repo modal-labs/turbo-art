@@ -152,7 +152,7 @@
   }
 
   .brush-active {
-    filter: brightness(0) saturate(100%) invert(79%) sepia(13%) saturate(361%)
-      hue-rotate(65deg) brightness(91%) contrast(86%);
+    filter: brightness(0) saturate(100%) invert(64%) sepia(27%) saturate(194%)
+      hue-rotate(69deg) brightness(89%) contrast(89%);
   }
 </style>
