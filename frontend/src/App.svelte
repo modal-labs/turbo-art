@@ -325,17 +325,17 @@
   };
 </script>
 
-<main class="flex flex-col items-center sm:pt-12 text-light-green">
-  <div class="max-w-screen-lg w-[1024px]">
+<main class="flex flex-col items-center md:pt-12 text-light-green">
+  <div class="md:max-w-screen-lg md:w-[1024px] w-full">
     <div
-      class="bg-light-green/10 border border-light-green/20 rounded-lg p-6 flex flex-col gap-6"
+      class="bg-light-green/10 sm:border sm:border-light-green/20 md:rounded-lg p-2 sm:p-6 flex flex-col gap-6"
     >
-      <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-3 sm:gap-1">
         <div class="flex items-center justify-between">
           <img width={200} src={turboArtTitleGif} alt="Turbo.Art" />
           <a
             href="https://github.com/modal-labs/turbo-art/tree/main"
-            class="btns-container justify-center py-2 px-5 font-medium"
+            class="btns-container justify-center font-medium"
           >
             <Github size={20} />View Code
           </a>
@@ -351,7 +351,7 @@
 
       <div class="flex flex-col gap-4">
         <h3 class="heading">Prompt</h3>
-        <div class="flex flex-col sm:flex-row gap-2">
+        <div class="flex flex-col sm:flex-row gap-2 md:flex-nowrap flex-wrap">
           {#each promptOptions as item}
             <button
               class="italic flex-shrink-0 text-xs px-4 py-2 border border-light-green/30 rounded-full"
@@ -367,8 +367,10 @@
         />
       </div>
 
-      <div class="flex flex-col sm:flex-row">
-        <div class="flex flex-col gap-6 border-r border-light-green/10 w-full">
+      <div class="flex flex-col md:flex-row gap-6 md:gap-0">
+        <div
+          class="flex flex-col gap-6 md:border-r md:border-light-green/10 w-full"
+        >
           <div class="flex flex-col gap-1">
             <div class="heading flex gap-1 items-center">
               Canvas
@@ -379,7 +381,7 @@
             <div class="text-xs">Draw on the image to generate a new one</div>
           </div>
 
-          <div class="flex gap-6">
+          <div class="flex gap-6 flex-col sm:flex-row">
             <div>
               <img
                 alt="input"
@@ -433,7 +435,7 @@
           </label>
         </div>
 
-        <div class="flex flex-col gap-4 w-full pl-6">
+        <div class="flex flex-col gap-4 w-full md:pl-6">
           <div class="flex flex-col gap-1">
             <div class="flex items-center gap-1 heading">
               Output
@@ -446,7 +448,7 @@
             </div>
           </div>
 
-          <div class="flex gap-4">
+          <div class="flex gap-4 flex-col sm:flex-row">
             <img
               width={320}
               height={320}
@@ -456,7 +458,7 @@
               class:hidden={!firstImageGenerated}
               on:load={resizeImage}
             />
-            <div class="flex flex-col gap-4">
+            <div class="flex flex-col sm:gap-4 gap-2">
               <div class="tools-container">
                 <button class="text-xs flex gap-1" on:click={undoOutputImage}>
                   <Undo size={16} />Back
@@ -473,14 +475,14 @@
                 <Wand size={16} />Enhance
               </button>
               <button
-                class="text-xs tools-container sm"
+                class="text-xs tools-container tools-container-sm"
                 on:click={movetoCanvas}
               >
                 <ArrowLeftSquare size={16} />Move to Canvas
               </button>
 
               <button
-                class="text-xs tools-container sm"
+                class="text-xs tools-container tools-container-sm"
                 on:click={downloadImage}
               >
                 <ArrowDownToLine size={16} /> Download
@@ -491,7 +493,9 @@
       </div>
     </div>
 
-    <div class="w-full flex mt-6 mb-[92px] justify-between items-center">
+    <div
+      class="md:w-full flex mt-6 md:mb-[92px] mb-8 mx-2 sm:mx-6 md:mx-0 justify-between items-center"
+    >
       <div class="flex items-center gap-2">
         Built with <img
           class="modal-logo"
@@ -525,10 +529,16 @@
   }
 
   :global(.tools-container) {
-    @apply flex gap-2.5 py-2 px-3 border rounded-[10px] border-light-green/10 bg-light-green/10;
+    @apply flex gap-2.5 py-2 px-3 border rounded-[10px] border-light-green/10 bg-light-green/10 w-fit;
   }
   .tools-container,
-  .sm {
+  .tools-container-sm {
     @apply gap-1.5 px-2;
+  }
+
+  @media (min-width: 640px) {
+    .tools-container-sm {
+      @apply w-full;
+    }
   }
 </style>

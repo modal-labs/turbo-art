@@ -8,15 +8,13 @@ app = App("stable-diffusion-xl-turbo")
 
 web_image = Image.debian_slim().pip_install("jinja2")
 
-inference_image = (
-    Image.debian_slim()
-    .pip_install(
-        "Pillow~=10.1.0",
-        "diffusers~=0.24",
-        "transformers~=4.35",
-        "accelerate~=0.25",
-        "safetensors~=0.4",
-    )
+inference_image = Image.debian_slim().pip_install(
+    "Pillow~=10.1.0",
+    "diffusers~=0.24",
+    "transformers~=4.35",
+    "accelerate~=0.25",
+    "safetensors~=0.4",
+    "fastapi[standard]",
 )
 
 with inference_image.imports():
