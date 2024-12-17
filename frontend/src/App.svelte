@@ -1,15 +1,5 @@
 <script lang="ts">
-  import {
-    Github,
-    Loader,
-    Upload,
-    Undo,
-    Redo,
-    ArrowDownToLine,
-    ArrowLeftSquare,
-    ArrowUpRight,
-    Wand,
-  } from "lucide-svelte";
+  import { Github, Loader, Upload, ArrowUpRight } from "lucide-svelte";
   import { onMount } from "svelte";
   import paper from "paper";
   import { throttle, debounce } from "throttle-debounce";
@@ -20,6 +10,8 @@
   import valleyImg from "$lib/assets/valley.png";
   import turboArtTitleGif from "$lib/assets/turbo-art-title.gif";
   import PreviewImages from "$lib/PreviewImages.svelte";
+  import ImageOutput from "$lib/ImageOutput.svelte";
+  import Tools from "$lib/Tools.svelte";
 
   const promptOptionsByImage: Record<string, string[]> = {
     abstract: [
@@ -59,7 +51,7 @@
   let fileInput: HTMLInputElement;
 
   let isImageUploaded = false;
-  let firstImageGenerated = false;
+  let isFirstImageGenerated = false;
   $: numIterations = 0;
 
   // we track lastUpdatedAt so that expired requests don't overwrite the latest
@@ -127,9 +119,9 @@
 
     // kick off an inference on first image load so output image is populated as well
     // otherwise it will be empty
-    if (!firstImageGenerated) {
+    if (!isFirstImageGenerated) {
       generateOutputImage();
-      firstImageGenerated = true;
+      isFirstImageGenerated = true;
     }
   };
 
@@ -319,7 +311,7 @@
           lastUpdatedAt = sentAt;
         }
 
-        firstImageGenerated = true;
+        isFirstImageGenerated = true;
       })
       .finally(() => (isLoading = false));
   };
@@ -328,7 +320,7 @@
 <main class="flex flex-col items-center md:pt-12 text-light-green">
   <div class="md:max-w-screen-lg lg:w-[1024px] w-full">
     <div
-      class="bg-light-green/10 sm:border sm:border-light-green/20 md:rounded-lg p-2 sm:p-6 flex flex-col gap-6"
+      class="bg-light-green/10 sm:border sm:border-light-green/20 md:rounded-lg px-4 py-6 sm:p-6 flex flex-col gap-6"
     >
       <div class="flex flex-col gap-3 sm:gap-1">
         <div class="flex items-center justify-between">
@@ -374,7 +366,7 @@
 
       <div class="flex flex-col md:flex-row gap-6 md:gap-0">
         <div
-          class="flex flex-col gap-6 md:border-r md:border-light-green/10 w-full"
+          class="flex flex-col gap-6 md:pr-4 md:border-r md:border-light-green/10 w-full"
         >
           <div class="flex flex-col gap-1">
             <div class="heading flex gap-1 items-center">
@@ -402,17 +394,31 @@
                 class="z-1"
               />
             </div>
-            <Paint
-              {paint}
-              {brushSize}
-              on:clearCanvas={() => {
-                paper.project.activeLayer.removeChildren();
-                paper.view.update();
-                generateOutputImage();
-              }}
-              on:setPaint={setPaint}
-              on:setBrushSize={setBrushSize}
-            />
+            <div class="sm:hidden block">
+              <ImageOutput {imgOutput} {isFirstImageGenerated} {resizeImage} />
+            </div>
+            <div class="flex gap-4">
+              <Paint
+                {paint}
+                {brushSize}
+                on:clearCanvas={() => {
+                  paper.project.activeLayer.removeChildren();
+                  paper.view.update();
+                  generateOutputImage();
+                }}
+                on:setPaint={setPaint}
+                on:setBrushSize={setBrushSize}
+              />
+              <div class="sm:hidden block">
+                <Tools
+                  {undoOutputImage}
+                  {redoOutputImage}
+                  {enhance}
+                  {movetoCanvas}
+                  {downloadImage}
+                />
+              </div>
+            </div>
           </div>
           <div class="flex gap-2">
             <PreviewImages
@@ -434,7 +440,7 @@
           />
           <label
             for="file-upload"
-            class="btns-container flex-col w-fit cursor-pointer"
+            class="btns-container flex-col w-fit cursor-pointer w-full sm:w-fit"
           >
             <div class="flex items-center gap-2 font-medium">
               <Upload size={16} />
@@ -444,7 +450,7 @@
         </div>
 
         <div class="flex flex-col gap-4 w-full md:pl-6">
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col gap-1 sm:block hidden">
             <div class="flex items-center gap-1 heading">
               Output
               {#if isLoading}
@@ -457,44 +463,17 @@
           </div>
 
           <div class="flex gap-4 flex-col sm:flex-row md:flex-col lg:flex-row">
-            <img
-              width={320}
-              height={320}
-              alt="loading..."
-              bind:this={imgOutput}
-              class="bg-[#D9D9D9]"
-              class:hidden={!firstImageGenerated}
-              on:load={resizeImage}
-            />
-            <div class="flex flex-col sm:gap-3 gap-2">
-              <div class="tools-container">
-                <button class="text-xs flex gap-1" on:click={undoOutputImage}>
-                  <Undo size={16} />Back
-                </button>
-                <div class="w-[1px] h-4 bg-white/10" />
-                <button class="text-xs flex gap-1" on:click={redoOutputImage}>
-                  <Redo size={16} />Next
-                </button>
-              </div>
-              <button
-                class="special-button text-xs tools-container tools-container-sm yellow-background"
-                on:click={enhance}
-              >
-                <Wand size={16} />Enhance
-              </button>
-              <button
-                class="text-xs tools-container tools-container-sm"
-                on:click={movetoCanvas}
-              >
-                <ArrowLeftSquare size={16} />Move to Canvas
-              </button>
-
-              <button
-                class="text-xs tools-container tools-container-sm"
-                on:click={downloadImage}
-              >
-                <ArrowDownToLine size={16} /> Download
-              </button>
+            <div class="sm:block hidden">
+              <ImageOutput {imgOutput} {isFirstImageGenerated} {resizeImage} />
+            </div>
+            <div class="sm:block hidden">
+              <Tools
+                {undoOutputImage}
+                {redoOutputImage}
+                {enhance}
+                {movetoCanvas}
+                {downloadImage}
+              />
             </div>
           </div>
         </div>
@@ -502,7 +481,7 @@
     </div>
 
     <div
-      class="md:w-full flex mt-6 md:mb-[92px] mb-8 mx-2 sm:mx-6 md:mx-0 justify-between items-center"
+      class="lg:w-full flex mt-6 mb-8 md:mb-12 mx-2 md:mx-6 lg:mx-0 justify-between items-center"
     >
       <div class="flex items-center gap-2 font-degular">
         Built with <img
@@ -547,19 +526,5 @@
 
   :global(.tools-container) {
     @apply flex gap-2.5 py-2 px-3 border rounded-[10px] border-light-green/5 bg-light-green/10 w-fit;
-  }
-  .tools-container,
-  .tools-container-sm {
-    @apply gap-1.5 px-2 w-[132px];
-  }
-
-  @media (min-width: 1024px) {
-    .tools-container {
-      @apply w-full;
-    }
-  }
-
-  .yellow-background {
-    @apply bg-muted-yellow text-gray-900;
   }
 </style>
