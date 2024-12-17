@@ -5,15 +5,11 @@
 
 @layer base {
   body {
-    @apply bg-ground text-gray-200;
+    @apply bg-black;
     color-scheme: dark;
     text-rendering: optimizelegibility;
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
-  }
-
-  mark {
-    @apply bg-primary;
   }
 
   * {

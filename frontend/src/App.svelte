@@ -7,7 +7,7 @@
     Redo,
     ArrowDownToLine,
     ArrowLeftSquare,
-    MoveUpRight,
+    ArrowUpRight,
     Wand,
   } from "lucide-svelte";
   import { onMount } from "svelte";
@@ -332,7 +332,7 @@
     >
       <div class="flex flex-col gap-3 sm:gap-1">
         <div class="flex items-center justify-between">
-          <img width={200} src={turboArtTitleGif} alt="Turbo.Art" />
+          <img width={175} src={turboArtTitleGif} alt="Turbo.Art" />
           <a
             href="https://github.com/modal-labs/turbo-art/tree/main"
             class="btns-container justify-center font-medium"
@@ -342,7 +342,7 @@
         </div>
         <div class="text-sm">
           The image generation is powered by Stability's <a
-            class="primary underline"
+            class="underline"
             href="https://stability.ai/news/stability-ai-sdxl-turbo"
             >SDXL Turbo</a
           >
@@ -354,7 +354,8 @@
         <div class="flex flex-col sm:flex-row gap-2 lg:flex-nowrap flex-wrap">
           {#each promptOptions as item}
             <button
-              class="italic flex-shrink-0 text-xs px-4 py-2 border border-light-green/30 rounded-full"
+              class="italic flex-shrink-0 text-xs px-4 py-2 border border-light-green/30 rounded-full text-light-green/60"
+              class:prompt-active={item === value}
               on:click={() => setPrompt(item)}>{item}</button
             >
           {/each}
@@ -427,7 +428,10 @@
             on:change={loadImage}
             on:click={resetInput}
           />
-          <label for="file-upload" class="btns-container flex-col w-fit">
+          <label
+            for="file-upload"
+            class="btns-container flex-col w-fit cursor-pointer"
+          >
             <div class="flex items-center gap-2 font-medium">
               <Upload size={16} />
               Upload Image (PNG, JPEG)
@@ -458,7 +462,7 @@
               class:hidden={!firstImageGenerated}
               on:load={resizeImage}
             />
-            <div class="flex flex-col sm:gap-4 gap-2">
+            <div class="flex flex-col sm:gap-3 gap-2">
               <div class="tools-container">
                 <button class="text-xs flex gap-1" on:click={undoOutputImage}>
                   <Undo size={16} />Back
@@ -496,7 +500,7 @@
     <div
       class="md:w-full flex mt-6 md:mb-[92px] mb-8 mx-2 sm:mx-6 md:mx-0 justify-between items-center"
     >
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 font-degular">
         Built with <img
           class="modal-logo"
           alt="Modal logo"
@@ -504,7 +508,7 @@
         />
       </div>
       <a href="https://modal.com" class="button px-5 py-[6px] font-medium">
-        Get Started <MoveUpRight size={16} />
+        Get Started <ArrowUpRight size={16} />
       </a>
     </div>
   </div>
@@ -526,6 +530,10 @@
   .modal-logo {
     width: 108px;
     height: 32px;
+  }
+
+  .prompt-active {
+    @apply text-light-green border-light-green/80;
   }
 
   :global(.tools-container) {

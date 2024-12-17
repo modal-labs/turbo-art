@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Eraser } from "lucide-svelte";
-  import { Color, ColorInput } from "color-picker-svelte";
+  import { Color } from "color-picker-svelte";
 
   import smallPaintIcon from "$lib/assets/sm-paint-icon.svg";
   import extraSmallPaintIcon from "$lib/assets/xs-paint-icon.svg";
@@ -37,7 +37,7 @@
         class="flex items-center gap-2.5 w-full text-xs"
         on:click={() => handleClearCanvas()}
       >
-        <Eraser size={12} /> Clear
+        <Eraser size={16} /> Clear
       </button>
     </div>
   </div>
@@ -143,7 +143,7 @@
   }
 
   .circle-active {
-    @apply border-2 border-primary;
+    @apply border-[1px] border-light-green;
   }
 
   .brush {
@@ -152,7 +152,7 @@
   }
 
   .brush-active {
-    filter: invert(84%) sepia(34%) saturate(768%) hue-rotate(51deg)
-      brightness(97%) contrast(92%);
+    filter: brightness(0) saturate(100%) invert(79%) sepia(13%) saturate(361%)
+      hue-rotate(65deg) brightness(91%) contrast(86%);
   }
 </style>

@@ -11,9 +11,6 @@ export default {
         xl: "1200px",
       },
       colors: {
-        // Dark base background color
-        ground: "#0C0F0B",
-
         // Theme colors
         primary: "#7FEE64",
         "light-green": "#DDFFDC",
