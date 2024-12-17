@@ -326,7 +326,7 @@
 </script>
 
 <main class="flex flex-col items-center md:pt-12 text-light-green">
-  <div class="md:max-w-screen-lg md:w-[1024px] w-full">
+  <div class="md:max-w-screen-lg lg:w-[1024px] w-full">
     <div
       class="bg-light-green/10 sm:border sm:border-light-green/20 md:rounded-lg p-2 sm:p-6 flex flex-col gap-6"
     >
@@ -351,7 +351,7 @@
 
       <div class="flex flex-col gap-4">
         <h3 class="heading">Prompt</h3>
-        <div class="flex flex-col sm:flex-row gap-2 md:flex-nowrap flex-wrap">
+        <div class="flex flex-col sm:flex-row gap-2 lg:flex-nowrap flex-wrap">
           {#each promptOptions as item}
             <button
               class="italic flex-shrink-0 text-xs px-4 py-2 border border-light-green/30 rounded-full"
@@ -448,7 +448,7 @@
             </div>
           </div>
 
-          <div class="flex gap-4 flex-col sm:flex-row">
+          <div class="flex gap-4 flex-col sm:flex-row md:flex-col lg:flex-row">
             <img
               width={320}
               height={320}
@@ -469,7 +469,7 @@
                 </button>
               </div>
               <button
-                class="special-button text-xs tools-container sm bg-muted-yellow"
+                class="special-button text-xs tools-container tools-container-sm yellow-background"
                 on:click={enhance}
               >
                 <Wand size={16} />Enhance
@@ -533,12 +533,16 @@
   }
   .tools-container,
   .tools-container-sm {
-    @apply gap-1.5 px-2;
+    @apply gap-1.5 px-2 w-[132px];
   }
 
-  @media (min-width: 640px) {
-    .tools-container-sm {
+  @media (min-width: 1024px) {
+    .tools-container {
       @apply w-full;
     }
+  }
+
+  .yellow-background {
+    @apply bg-muted-yellow text-gray-900;
   }
 </style>
