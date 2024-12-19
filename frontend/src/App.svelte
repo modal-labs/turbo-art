@@ -40,7 +40,7 @@
       "italian food, cezanne painting",
     ],
   };
-  let value: string = "Enter prompt here";
+  let value: string = "";
   $: currentImageName = "valley";
   $: promptOptions = promptOptionsByImage[currentImageName];
 
@@ -361,6 +361,7 @@
           bind:value
           bind:this={inputElement}
           on:input={debouncedgenerateOutputImage}
+          placeholder="Enter prompt here"
         />
       </div>
 
@@ -483,7 +484,7 @@
     <div
       class="lg:w-full flex mt-6 mb-8 md:mb-12 mx-2 md:mx-6 lg:mx-0 justify-between items-center"
     >
-      <div class="flex items-center gap-2 font-degular">
+      <div class="flex items-center gap-3 font-degular">
         Built with <img
           class="modal-logo"
           alt="Modal logo"
