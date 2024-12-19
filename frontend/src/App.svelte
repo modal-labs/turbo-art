@@ -52,6 +52,7 @@
 
   let isImageUploaded = false;
   let isFirstImageGenerated = false;
+  let isMobile = false;
   $: numIterations = 0;
 
   // we track lastUpdatedAt so that expired requests don't overwrite the latest
@@ -79,7 +80,15 @@
     brushSize = e.detail;
   };
 
+  const checkBreakpoint = () => {
+    isMobile = window.innerWidth < 640;
+  };
+
   onMount(() => {
+    // Manual mobile check is needed because of binding issues with <ImageOutput />
+    checkBreakpoint();
+    window.addEventListener("resize", checkBreakpoint);
+
     /* 
       Setup paper.js for canvas which is a layer above our input image.
       Paper is used for drawing/paint functionality.
@@ -109,6 +118,7 @@
     }
 
     setImage(valleyImg);
+    return () => window.removeEventListener("resize", checkBreakpoint);
   });
 
   const onLoadInputImg = (event: Event) => {
@@ -395,9 +405,13 @@
                 class="z-1"
               />
             </div>
-            <div class="sm:hidden block">
-              <ImageOutput {imgOutput} {isFirstImageGenerated} {resizeImage} />
-            </div>
+            {#if isMobile}
+              <ImageOutput
+                bind:imgOutput
+                {isFirstImageGenerated}
+                {resizeImage}
+              />
+            {/if}
             <div class="flex gap-4">
               <Paint
                 {paint}
@@ -450,7 +464,7 @@
           </label>
         </div>
 
-        <div class="flex flex-col gap-4 w-full md:pl-6">
+        <div class="flex flex-col gap-6 w-full md:pl-6">
           <div class="flex flex-col gap-1 sm:block hidden">
             <div class="flex items-center gap-1 heading">
               Output
@@ -464,9 +478,13 @@
           </div>
 
           <div class="flex gap-4 flex-col sm:flex-row md:flex-col lg:flex-row">
-            <div class="sm:block hidden">
-              <ImageOutput {imgOutput} {isFirstImageGenerated} {resizeImage} />
-            </div>
+            {#if !isMobile}
+              <ImageOutput
+                bind:imgOutput
+                {isFirstImageGenerated}
+                {resizeImage}
+              />
+            {/if}
             <div class="sm:block hidden">
               <Tools
                 {undoOutputImage}
