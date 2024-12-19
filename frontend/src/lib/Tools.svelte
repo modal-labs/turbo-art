@@ -48,7 +48,7 @@
 <style lang="postcss">
   .tools-container,
   .tools-container-sm {
-    @apply gap-1.5 px-2 w-[132px];
+    @apply gap-1.5 px-2 min-w-[132px];
   }
 
   @media (min-width: 1024px) {
