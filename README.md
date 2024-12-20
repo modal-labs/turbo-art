@@ -52,6 +52,7 @@ For modal-labs workspace ensure you're on the `deploy` branch of this Git repo a
 Once you're happy with your changes, [deploy](https://modal.com/docs/guide/managing-deployments#creating-deployments) your app:
 
 ```shell
+npx vite build
 modal deploy turbo_art.py
 ```
 
