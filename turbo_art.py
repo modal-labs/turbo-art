@@ -14,7 +14,7 @@ inference_image = Image.debian_slim().pip_install(
     "transformers~=4.35",
     "accelerate~=0.25",
     "safetensors~=0.4",
-    "fastapi[standard]",
+    "fastapi[standard]~=0.115",
 )
 
 with inference_image.imports():
