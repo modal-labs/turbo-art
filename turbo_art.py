@@ -6,17 +6,15 @@ from modal import Image, Mount, App, asgi_app, build, enter, gpu, web_endpoint
 
 app = App("stable-diffusion-xl-turbo")
 
-web_image = Image.debian_slim().pip_install("jinja2")
+web_image = Image.debian_slim().pip_install("jinja2", "fastapi[standard]")
 
-inference_image = (
-    Image.debian_slim()
-    .pip_install(
-        "Pillow~=10.1.0",
-        "diffusers~=0.24",
-        "transformers~=4.35",
-        "accelerate~=0.25",
-        "safetensors~=0.4",
-    )
+inference_image = Image.debian_slim().pip_install(
+    "Pillow~=10.1.0",
+    "diffusers~=0.24",
+    "transformers~=4.35",
+    "accelerate~=0.25",
+    "safetensors~=0.4",
+    "fastapi[standard]",
 )
 
 with inference_image.imports():
@@ -57,12 +55,12 @@ class Model:
         self.pipe = AutoPipelineForImage2Image.from_pretrained(
             "stabilityai/sdxl-turbo",
             torch_dtype=torch.float16,
-            device_map="auto",
+            device_map="balanced",
             variant="fp16",
             vae=AutoencoderKL.from_pretrained(
                 "madebyollin/sdxl-vae-fp16-fix",
                 torch_dtype=torch.float16,
-                device_map="auto",
+                device_map="balanced",
             ),
         )
 
