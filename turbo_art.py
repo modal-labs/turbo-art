@@ -27,7 +27,7 @@ with inference_image.imports():
 
 
 @app.cls(
-    gpu="A100",
+    gpu=["A100", "H100"],
     image=inference_image,
     container_idle_timeout=240,
     concurrency_limit=10,
@@ -117,7 +117,7 @@ static_path = base_path.joinpath("frontend", "dist")
     image=web_image,
     allow_concurrent_inputs=10,
 )
-@asgi_app()
+@asgi_app(custom_domains=["turbo.art"])
 def fastapi_app():
     web_app = FastAPI()
     from jinja2 import Template
