@@ -1,37 +1,17 @@
 <script lang="ts">
-  import {
-    Github,
-    Loader,
-    Upload,
-    Undo,
-    Redo,
-    ArrowDownToLine,
-    ArrowLeftSquare,
-    MoveUpRight,
-    Sparkle,
-  } from "lucide-svelte";
+  import { Github, Loader, Upload, ArrowUpRight } from "lucide-svelte";
   import { onMount } from "svelte";
   import paper from "paper";
   import { throttle, debounce } from "throttle-debounce";
 
-  import BackgroundGradient from "$lib/BackgroundGradient.svelte";
   import modalLogoWithText from "$lib/assets/logotype.svg";
   import Paint from "$lib/Paint.svelte";
   import easterEggImage from "$lib/assets/mocha_outside.png";
   import valleyImg from "$lib/assets/valley.png";
   import turboArtTitleGif from "$lib/assets/turbo-art-title.gif";
-  import resolveConfig from "tailwindcss/resolveConfig";
-  import tailwindConfig from "../tailwind.config.js";
   import PreviewImages from "$lib/PreviewImages.svelte";
-
-  const fullConfig = resolveConfig(tailwindConfig);
-  const breakpointSm = parseInt(fullConfig.theme.screens.sm);
-  $: isMobile = false;
-
-  const handleWindowResize = () => {
-    const isSmallWindow = window.innerWidth <= breakpointSm;
-    isMobile = isSmallWindow;
-  };
+  import ImageOutput from "$lib/ImageOutput.svelte";
+  import Tools from "$lib/Tools.svelte";
 
   const promptOptionsByImage: Record<string, string[]> = {
     abstract: [
@@ -60,7 +40,7 @@
       "italian food, cezanne painting",
     ],
   };
-  let value: string = promptOptionsByImage["valley"][0];
+  let value: string = "";
   $: currentImageName = "valley";
   $: promptOptions = promptOptionsByImage[currentImageName];
 
@@ -71,7 +51,8 @@
   let fileInput: HTMLInputElement;
 
   let isImageUploaded = false;
-  let firstImageGenerated = false;
+  let isFirstImageGenerated = false;
+  let isMobile = false;
   $: numIterations = 0;
 
   // we track lastUpdatedAt so that expired requests don't overwrite the latest
@@ -99,8 +80,14 @@
     brushSize = e.detail;
   };
 
+  const checkBreakpoint = () => {
+    isMobile = window.innerWidth < 640;
+  };
+
   onMount(() => {
-    handleWindowResize();
+    // Manual mobile check is needed because of binding issues with <ImageOutput />
+    checkBreakpoint();
+    window.addEventListener("resize", checkBreakpoint);
 
     /* 
       Setup paper.js for canvas which is a layer above our input image.
@@ -131,6 +118,7 @@
     }
 
     setImage(valleyImg);
+    return () => window.removeEventListener("resize", checkBreakpoint);
   });
 
   const onLoadInputImg = (event: Event) => {
@@ -141,9 +129,9 @@
 
     // kick off an inference on first image load so output image is populated as well
     // otherwise it will be empty
-    if (!firstImageGenerated) {
+    if (!isFirstImageGenerated) {
       generateOutputImage();
-      firstImageGenerated = true;
+      isFirstImageGenerated = true;
     }
   };
 
@@ -247,7 +235,7 @@
     () => {
       generateOutputImage();
     },
-    { noLoading: false, noTrailing: false },
+    { noLoading: false, noTrailing: false }
   );
 
   const debouncedgenerateOutputImage = debounce(
@@ -255,7 +243,7 @@
     () => {
       generateOutputImage();
     },
-    { atBegin: false },
+    { atBegin: false }
   );
 
   const movetoCanvas = () => {
@@ -301,7 +289,7 @@
 
   const generateOutputImage = async (
     useOutputImage: boolean = false,
-    iterations: number = 2,
+    iterations: number = 2
   ) => {
     isLoading = true;
     const data = await getImageData(useOutputImage);
@@ -333,178 +321,98 @@
           lastUpdatedAt = sentAt;
         }
 
-        firstImageGenerated = true;
+        isFirstImageGenerated = true;
       })
       .finally(() => (isLoading = false));
   };
 </script>
 
-<svelte:window on:resize={handleWindowResize} />
-<BackgroundGradient />
-<main class="flex flex-col items-center sm:pt-12">
-  <div class="container">
-    <div class="flex items-center justify-between">
-      <div>
-        <img
-          width={200}
-          class="absolute mt-[-55px] z-[-1] left-0 sm:left-auto scale-75 sm:scale-100"
-          src={turboArtTitleGif}
-          alt="Turbo.Art"
-        />
-        <div class="h-28" />
+<main class="flex flex-col items-center md:pt-12 text-light-green">
+  <div class="md:max-w-screen-lg lg:w-[1024px] w-full">
+    <div
+      class="bg-light-green/10 sm:border sm:border-light-green/20 md:rounded-lg px-4 py-6 sm:p-6 flex flex-col gap-6"
+    >
+      <div class="flex flex-col gap-3 sm:gap-1">
+        <div class="flex items-center justify-between">
+          <img width={175} src={turboArtTitleGif} alt="Turbo.Art" />
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/modal-labs/turbo-art/tree/main"
+            class="btns-container justify-center font-medium"
+          >
+            <Github size={20} />View Code
+          </a>
+        </div>
+        <div class="text-sm">
+          The image generation is powered by Stability's <a
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline"
+            href="https://stability.ai/news/stability-ai-sdxl-turbo"
+            >SDXL Turbo</a
+          >
+        </div>
       </div>
-      <a
-        href="https://github.com/modal-labs/turbo-art/tree/main"
-        class="btns-container justify-center py-2 px-5 font-medium"
-      >
-        <Github size={16} />View Code
-      </a>
-    </div>
-    <div class="font-sm">
-      The image generation is powered by Stability's <a
-        class="primary underline"
-        href="https://stability.ai/news/stability-ai-sdxl-turbo">SDXL Turbo</a
-      >
-    </div>
 
-    <div class="mt-3">
-      {#if !isMobile}
-        <h3 class="mb-3 font-semibold">Prompt</h3>
-        <div class="flex flex-col sm:flex-row gap-2">
+      <div class="flex flex-col gap-4">
+        <h3 class="heading">Prompt</h3>
+        <div class="flex flex-col sm:flex-row gap-2 lg:flex-nowrap flex-wrap">
           {#each promptOptions as item}
             <button
-              class="btns-container text-xs py-0.5 px-2"
-              style="width:fit-content"
+              class="italic flex-shrink-0 text-xs px-4 py-2 border border-light-green/30 rounded-full text-light-green/60"
+              class:prompt-active={item === value}
               on:click={() => setPrompt(item)}>{item}</button
             >
           {/each}
         </div>
         <input
-          class="rounded-lg border border-white/20 bg-white/10 py-4 px-6 outline-none w-full mt-3"
+          class="rounded-full bg-light-green/10 py-4 px-6 w-full text-sm"
           bind:value
           bind:this={inputElement}
           on:input={debouncedgenerateOutputImage}
+          placeholder="Enter prompt here"
         />
-      {/if}
-
-      {#if isMobile}
-        <div class="mt-3">
-          <PreviewImages
-            {promptOptionsByImage}
-            {imgInput}
-            {setImage}
-            setCurrentImage={(name) => (currentImageName = name)}
-            setPrompt={(v) => (value = v)}
-          />
-        </div>
-      {/if}
-    </div>
-
-    <div class="mt-3 flex flex-col sm:flex-row">
-      <div class="pr-7 sm:border-r border-white/10 flex flex-col sm:flex-row">
-        <div>
-          <div class="pb-3">
-            <div class="mb-2 font-medium flex gap-1 items-center">
-              Canvas
-              {#if isMobile}
-                {#if isLoading}
-                  <Loader size={14} class="animate-spin" />
-                {/if}
-              {/if}
-            </div>
-            <div>Draw on the image to generate a new one</div>
-          </div>
-
-          <img
-            alt="input"
-            bind:this={imgInput}
-            class="absolute bg-[#D9D9D9] pointer-events-none z-[-1]"
-            class:hidden={!isImageUploaded}
-            on:load={onLoadInputImg}
-          />
-          <canvas
-            bind:this={canvasDrawLayer}
-            width={320}
-            height={320}
-            class="w-[320px] h-[320px] z-1"
-          />
-
-          {#if !isMobile}
-            <div class="mt-3 flex gap-4">
-              <PreviewImages
-                {promptOptionsByImage}
-                {imgInput}
-                {setImage}
-                setCurrentImage={(name) => (currentImageName = name)}
-                setPrompt={(v) => (value = v)}
-              />
-            </div>
-          {/if}
-        </div>
-
-        {#if !isMobile}
-          <div class="sm:ml-3 mt-3 sm:mt-[68px]">
-            <Paint
-              {paint}
-              {brushSize}
-              on:clearCanvas={() => {
-                paper.project.activeLayer.removeChildren();
-                paper.view.update();
-                generateOutputImage();
-              }}
-              on:setPaint={setPaint}
-              on:setBrushSize={setBrushSize}
-            />
-          </div>
-        {/if}
       </div>
 
-      <div class="sm:pl-7 flex flex-col sm:flex-row">
-        <div>
-          {#if !isMobile}
-            <div class="pb-3">
-              <div class="mb-2 flex items-center gap-1 font-medium">
-                Output
-                {#if isLoading}
-                  <Loader size={14} class="animate-spin" />
-                {/if}
-              </div>
-              <div>Generated Image (iterations: {numIterations})</div>
+      <div class="flex flex-col md:flex-row gap-6 md:gap-0">
+        <div
+          class="flex flex-col gap-6 md:pr-4 md:border-r md:border-light-green/10 w-full"
+        >
+          <div class="flex flex-col gap-1">
+            <div class="heading flex gap-1 items-center">
+              Canvas
+              {#if isLoading}
+                <Loader size={14} class="animate-spin" />
+              {/if}
             </div>
-          {/if}
-
-          <img
-            alt="loading..."
-            bind:this={imgOutput}
-            class="w-[320px] h-[320px] bg-[#D9D9D9]"
-            class:hidden={!firstImageGenerated}
-            on:load={resizeImage}
-          />
-        </div>
-
-        {#if isMobile}
-          <div class="mt-3">
-            <h3 class="mb-3 font-semibold">Prompt</h3>
-            <div class="flex flex-col sm:flex-row gap-2">
-              {#each promptOptions as item}
-                <button
-                  class="btns-container text-xs py-0.5 px-2"
-                  style="width:fit-content"
-                  on:click={() => setPrompt(item)}>{item}</button
-                >
-              {/each}
-            </div>
-            <input
-              class="rounded-lg border border-white/20 bg-white/10 py-4 px-6 outline-none w-full mt-3"
-              bind:value
-              bind:this={inputElement}
-              on:input={debouncedgenerateOutputImage}
-            />
+            <div class="text-xs">Draw on the image to generate a new one</div>
           </div>
-        {/if}
-        <div class="flex sm:justify-between sm:ml-6">
-          {#if isMobile}
-            <div class="mt-3 mr-3">
+
+          <div class="flex gap-6 flex-col sm:flex-row">
+            <div>
+              <img
+                alt="input"
+                bind:this={imgInput}
+                class="absolute bg-[#D9D9D9] pointer-events-none z-[-1]"
+                class:hidden={!isImageUploaded}
+                on:load={onLoadInputImg}
+              />
+              <canvas
+                bind:this={canvasDrawLayer}
+                width={320}
+                height={320}
+                class="z-1"
+              />
+            </div>
+            {#if isMobile}
+              <ImageOutput
+                bind:imgOutput
+                {isFirstImageGenerated}
+                {resizeImage}
+              />
+            {/if}
+            <div class="flex gap-4">
               <Paint
                 {paint}
                 {brushSize}
@@ -516,86 +424,114 @@
                 on:setPaint={setPaint}
                 on:setBrushSize={setBrushSize}
               />
+              <div class="sm:hidden block">
+                <Tools
+                  {undoOutputImage}
+                  {redoOutputImage}
+                  {enhance}
+                  {movetoCanvas}
+                  {downloadImage}
+                />
+              </div>
             </div>
-          {/if}
-          <div class="flex flex-col gap-4 mt-3 sm:mt-[68px]">
-            <div class="btns-container justify-space-between">
-              <button class="text-xs flex gap-1.5" on:click={undoOutputImage}>
-                <Undo size={16} />Back
-              </button>
-              <div class="w-[1px] h-4 bg-white/10" />
-              <button class="text-xs flex gap-1.5" on:click={redoOutputImage}>
-                <Redo size={16} />Next
-              </button>
+          </div>
+          <div class="flex gap-2">
+            <PreviewImages
+              {promptOptionsByImage}
+              {imgInput}
+              {setImage}
+              setCurrentImage={(name) => (currentImageName = name)}
+              setPrompt={(v) => (value = v)}
+            />
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            id="file-upload"
+            hidden
+            bind:this={fileInput}
+            on:change={loadImage}
+            on:click={resetInput}
+          />
+          <label
+            for="file-upload"
+            class="btns-container flex-col w-fit cursor-pointer w-full sm:w-fit"
+          >
+            <div class="flex items-center gap-2 font-medium">
+              <Upload size={16} />
+              Upload Image (JPG, PNG)
             </div>
-            <button
-              class="special-button text-xs btns-container"
-              on:click={enhance}
-            >
-              <Sparkle size={16} />Enhance
-            </button>
-            <button class="text-xs btns-container" on:click={movetoCanvas}>
-              <ArrowLeftSquare size={16} />Move to Canvas
-            </button>
+          </label>
+        </div>
 
-            <button class="text-xs btns-container" on:click={downloadImage}>
-              <ArrowDownToLine size={16} /> Download
-            </button>
+        <div class="flex flex-col gap-6 w-full md:pl-6">
+          <div class="flex flex-col gap-1 sm:block hidden">
+            <div class="flex items-center gap-1 heading">
+              Output
+              {#if isLoading}
+                <Loader size={14} class="animate-spin" />
+              {/if}
+            </div>
+            <div class="text-xs">
+              Generated Image (iterations: {numIterations})
+            </div>
+          </div>
+
+          <div class="flex gap-4 flex-col sm:flex-row md:flex-col lg:flex-row">
+            {#if !isMobile}
+              <ImageOutput
+                bind:imgOutput
+                {isFirstImageGenerated}
+                {resizeImage}
+              />
+            {/if}
+            <div class="sm:block hidden">
+              <Tools
+                {undoOutputImage}
+                {redoOutputImage}
+                {enhance}
+                {movetoCanvas}
+                {downloadImage}
+              />
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="mt-3">
-      <input
-        type="file"
-        accept="image/*"
-        id="file-upload"
-        hidden
-        bind:this={fileInput}
-        on:change={loadImage}
-        on:click={resetInput}
-      />
-      <label
-        for="file-upload"
-        class="button flex-col w-[446px] h-[76px] max-w-full"
-      >
-        <div class="flex items-center gap-2 font-medium">
-          <Upload size={16} />
-          Upload Image
-        </div>
-        <span class="text-xs">PNG, JPEG</span>
-      </label>
-    </div>
-  </div>
 
-  <div
-    class="w-full container flex mt-4 mb-[92px] justify-between items-center"
-  >
-    <div class="flex items-center gap-2">
-      Built with <img
-        class="modal-logo"
-        alt="Modal logo"
-        src={modalLogoWithText}
-      />
+    <div
+      class="lg:w-full flex mt-6 mb-8 md:mb-12 mx-2 md:mx-6 lg:mx-0 justify-between items-center"
+    >
+      <div class="flex items-center gap-3 font-degular">
+        Built with <img
+          class="modal-logo"
+          alt="Modal logo"
+          src={modalLogoWithText}
+        />
+      </div>
+      <a
+        target="_blank"
+        rel="noopener noreferrer"
+        href="https://modal.com"
+        class="button px-5 py-[6px] font-medium"
+      >
+        Get Started <ArrowUpRight size={16} />
+      </a>
     </div>
-    <a href="https://modal.com" class="button px-5 py-[6px] font-medium">
-      Get Started <MoveUpRight size={16} />
-    </a>
   </div>
 </main>
 
 <style lang="postcss">
-  .container {
-    @apply bg-white/10 border border-white/20 rounded-lg p-6 max-w-screen-lg;
+  .heading {
+    @apply text-2xl font-degular;
   }
 
   .btns-container {
-    @apply flex items-center gap-2.5 py-2 px-3 border rounded-[10px] border-white/5 bg-white/10;
-    width: 144px;
+    @apply flex items-center gap-2 py-2 px-6 border rounded-full border-light-green/30 text-sm;
   }
 
   .button {
-    @apply border border-primary bg-primary/20 rounded-lg justify-center items-center flex gap-2 cursor-pointer;
+    @apply bg-primary rounded-full justify-center items-center flex gap-2 text-black text-sm;
   }
 
   .modal-logo {
@@ -603,19 +539,11 @@
     height: 32px;
   }
 
-  .preview-active {
-    @apply border-2 border-primary;
+  .prompt-active {
+    @apply text-light-green border-light-green/80;
   }
 
-  .special-button {
-    background: linear-gradient(
-        93deg,
-        rgba(255, 83, 83, 0.6) -16.83%,
-        rgba(255, 35, 141, 0.6) 11.43%,
-        rgba(91, 127, 255, 0.6) 61.11%,
-        rgba(0, 255, 87, 0.6) 108.92%
-      ),
-      rgba(255, 255, 255, 0.1);
-    border: none;
+  :global(.tools-container) {
+    @apply flex gap-2.5 py-2 px-3 border rounded-[10px] border-light-green/5 bg-light-green/10 w-fit;
   }
 </style>

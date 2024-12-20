@@ -1,19 +1,22 @@
-import postcss from './postcss.config.js'
-import { defineConfig } from 'vite'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
-import path from 'path';
+import postcss from "./postcss.config.js";
+import { defineConfig } from "vite";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import path from "path";
 
 export default defineConfig({
   plugins: [svelte()],
-  css:{
-	  postcss
+  css: {
+    postcss,
   },
   build: {
-    minify: true
+    minify: true,
+  },
+  server: {
+    open: true,
   },
   resolve: {
     alias: {
-      $lib: path.resolve('./src/lib'),
+      $lib: path.resolve("./src/lib"),
     },
   },
-})
+});

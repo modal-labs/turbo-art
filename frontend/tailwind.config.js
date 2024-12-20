@@ -11,19 +11,17 @@ export default {
         xl: "1200px",
       },
       colors: {
-        // Dark base background color
-        ground: "#0C0F0B",
-
         // Theme colors
         primary: "#7FEE64",
-        "accent-pink": "#FF0ECA",
-        "accent-blue": "#B8E4FF",
+        "light-green": "#DDFFDC",
+        "muted-yellow": "#FFEA71"
       },
       fontFamily: {
         mono: ["Fira Mono", ...defaultTheme.fontFamily.mono],
         sans: ["Inter Variable", ...defaultTheme.fontFamily.sans],
         inter: ["Inter Variable", ...defaultTheme.fontFamily.sans],
         tosh: ["Tosh Modal", ...defaultTheme.fontFamily.sans],
+        degular: ["degular", ...defaultTheme.fontFamily.sans],
       },
 
       // Global font modifications
