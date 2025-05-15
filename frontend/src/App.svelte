@@ -1,3 +1,7 @@
+<script lang="ts" context="module">
+  export type ShapeType = "circle" | "square" | "polygon" | "brush";
+</script>
+
 <script lang="ts">
   import { Github, Loader, Upload, ArrowUpRight } from "lucide-svelte";
   import { onMount } from "svelte";
@@ -16,7 +20,7 @@
   const promptOptionsByImage: Record<string, string[]> = {
     abstract: [
       "cityscape, studio ghibli, illustration",
-      "a scene from Jodorowsky’s Dune, surreal, sandworm in the background",
+      "a scene from Jodorowsky's Dune, surreal, sandworm in the background",
       "lunar landing in the style of a van gogh painting",
     ],
     puppy: [
@@ -50,6 +54,10 @@
   let inputElement: HTMLInputElement;
   let fileInput: HTMLInputElement;
 
+  let path: paper.Path | undefined;
+  let rect: paper.Rectangle;
+  let circle: paper.Path.Circle;
+
   let isImageUploaded = false;
   let isFirstImageGenerated = false;
   let isMobile = false;
@@ -65,8 +73,17 @@
   $: isLoading = false;
   let isInputImageLoading = false;
 
-  $: brushSize = "sm";
-  $: paint = "black"; // can be hex
+  $: brushSize = localStorage.getItem("brushSize") || "sm";
+  $: brushShape = (localStorage.getItem("brushShape") as ShapeType) || "circle";
+  $: paint = localStorage.getItem("paint") || "black";
+
+  // Update localStorage when values change
+  $: {
+    localStorage.setItem("brushSize", brushSize);
+    localStorage.setItem("brushShape", brushShape);
+    localStorage.setItem("paint", paint);
+  }
+
   const radiusByBrushSize: Record<string, number> = {
     xs: 1,
     sm: 2,
@@ -79,7 +96,9 @@
   const setBrushSize = (e: CustomEvent<string>) => {
     brushSize = e.detail;
   };
-
+  const setBrushShape = (e: CustomEvent<ShapeType>) => {
+    brushShape = e.detail;
+  };
   const checkBreakpoint = () => {
     isMobile = window.innerWidth < 640;
   };
@@ -96,19 +115,50 @@
     paper.setup(canvasDrawLayer);
     const tool = new paper.Tool();
 
-    let path: paper.Path;
-
     tool.onMouseDown = (event: paper.ToolEvent) => {
-      path = new paper.Path();
-      path.strokeColor = new paper.Color(paint);
-      path.strokeWidth = radiusByBrushSize[brushSize] * 4;
-      path.add(event.point);
+      switch (brushShape) {
+        case "circle":
+          circle = new paper.Path.Circle(event.point, 10);
+          circle.strokeColor = new paper.Color(paint);
+          circle.strokeWidth = radiusByBrushSize[brushSize] * 4;
+          break;
+        case "square":
+          rect = new paper.Rectangle(event.point.x, event.point.y, 20, 20);
+          const rectPath = new paper.Path.Rectangle(rect);
+          rectPath.strokeColor = new paper.Color(paint);
+          rectPath.strokeWidth = radiusByBrushSize[brushSize] * 4;
+          break;
+        case "polygon":
+          if (!path || path.closed) {
+            path = new paper.Path();
+            path.strokeColor = new paper.Color(paint);
+            path.strokeWidth = radiusByBrushSize[brushSize] * 4;
+            // Add a circle at the first point
+            const dot = new paper.Path.Circle(
+              event.point,
+              radiusByBrushSize[brushSize] * 2
+            );
+            dot.fillColor = new paper.Color(paint);
+          }
+          if (path) {
+            path.add(event.point);
+          }
+          break;
+        case "brush":
+          path = new paper.Path();
+          path.strokeColor = new paper.Color(paint);
+          path.strokeWidth = radiusByBrushSize[brushSize] * 4;
+          path.add(event.point);
+          break;
+      }
 
       throttledgenerateOutputImage();
     };
 
     tool.onMouseDrag = (event: paper.ToolEvent) => {
-      path.add(event.point);
+      if (brushShape === "brush") {
+        path.add(event.point);
+      }
 
       throttledgenerateOutputImage();
     };
@@ -339,7 +389,7 @@
             target="_blank"
             rel="noopener noreferrer"
             href="https://github.com/modal-labs/turbo-art/tree/main"
-            class="btns-container justify-center font-medium"
+            class="btns-container justify-center font-medium focus-visible:outline-light-green focus-visible:outline outline-offset-1"
           >
             <Github size={20} />View Code
           </a>
@@ -348,7 +398,7 @@
           The image generation is powered by Stability's <a
             target="_blank"
             rel="noopener noreferrer"
-            class="underline"
+            class="underline focus-visible:outline-light-green focus-visible:outline outline-offset-1"
             href="https://stability.ai/news/stability-ai-sdxl-turbo"
             >SDXL Turbo</a
           >
@@ -360,14 +410,14 @@
         <div class="flex flex-col sm:flex-row gap-2 lg:flex-nowrap flex-wrap">
           {#each promptOptions as item}
             <button
-              class="italic flex-shrink-0 text-xs px-4 py-2 border border-light-green/30 rounded-full text-light-green/60"
+              class="italic flex-shrink-0 text-xs px-4 py-2 border border-light-green/30 rounded-full text-light-green/60 focus-visible:outline-light-green focus-visible:outline outline-offset-1"
               class:prompt-active={item === value}
               on:click={() => setPrompt(item)}>{item}</button
             >
           {/each}
         </div>
         <input
-          class="rounded-full bg-light-green/10 py-4 px-6 w-full text-sm"
+          class="rounded-full bg-light-green/10 py-4 px-6 w-full text-sm focus-visible:outline-light-green focus-visible:outline outline-offset-1"
           bind:value
           bind:this={inputElement}
           on:input={debouncedgenerateOutputImage}
@@ -416,13 +466,16 @@
               <Paint
                 {paint}
                 {brushSize}
+                {brushShape}
                 on:clearCanvas={() => {
                   paper.project.activeLayer.removeChildren();
                   paper.view.update();
+                  path = undefined;
                   generateOutputImage();
                 }}
                 on:setPaint={setPaint}
                 on:setBrushSize={setBrushSize}
+                on:setBrushShape={setBrushShape}
               />
               <div class="sm:hidden block">
                 <Tools
@@ -455,7 +508,7 @@
           />
           <label
             for="file-upload"
-            class="btns-container flex-col w-fit cursor-pointer w-full sm:w-fit"
+            class="btns-container flex-col w-fit cursor-pointer sm:w-fit focus-visible:outline-light-green focus-visible:outline outline-offset-1"
           >
             <div class="flex items-center gap-2 font-medium">
               <Upload size={16} />
@@ -464,8 +517,8 @@
           </label>
         </div>
 
-        <div class="flex flex-col gap-6 w-full md:pl-6">
-          <div class="flex flex-col gap-1 sm:block hidden">
+        <div class="flex flex-col gap-6 w-full md:pl-6 flex-shrink-0">
+          <div class="flex-col gap-1 sm:block hidden">
             <div class="flex items-center gap-1 heading">
               Output
               {#if isLoading}
@@ -513,7 +566,7 @@
         target="_blank"
         rel="noopener noreferrer"
         href="https://modal.com"
-        class="button px-5 py-[6px] font-medium"
+        class="button px-5 py-[6px] font-medium focus-visible:outline-light-green focus-visible:outline outline-offset-1"
       >
         Get Started <ArrowUpRight size={16} />
       </a>

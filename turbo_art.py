@@ -2,7 +2,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
-from modal import Image, Mount, App, asgi_app, build, enter, gpu, web_endpoint
+from modal import Image, Mount, App, asgi_app, build, enter, gpu, fastapi_endpoint, concurrent
 
 app = App("stable-diffusion-xl-turbo")
 
@@ -29,8 +29,8 @@ with inference_image.imports():
 @app.cls(
     gpu="A100",
     image=inference_image,
-    container_idle_timeout=240,
-    concurrency_limit=10,
+    scaledown_window=240,
+    max_containers=10,
 )
 class Model:
     @build()
@@ -75,7 +75,7 @@ class Model:
             seed=42,
         )
 
-    @web_endpoint(method="POST")
+    @fastapi_endpoint(method="POST")
     async def inference(
         self,
         image: UploadFile = File(...),
@@ -111,12 +111,11 @@ class Model:
 base_path = Path(__file__).parent
 static_path = base_path.joinpath("frontend", "dist")
 
-
 @app.function(
     mounts=[Mount.from_local_dir(static_path, remote_path="/assets")],
     image=web_image,
-    allow_concurrent_inputs=10,
 )
+@concurrent(max_inputs=10)
 @asgi_app()
 def fastapi_app():
     web_app = FastAPI()

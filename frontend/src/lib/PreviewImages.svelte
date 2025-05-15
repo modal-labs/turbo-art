@@ -14,6 +14,7 @@
 </script>
 
 <button
+  class="focus-visible:outline-light-green focus-visible:outline outline-offset-1"
   on:click={() => setCurrentImage("valley")}
   on:click={() => setImage(valleyImage)}
   on:click={() => setPrompt(promptOptionsByImage["valley"][0])}
@@ -26,6 +27,7 @@
   />
 </button>
 <button
+  class="focus-visible:outline-light-green focus-visible:outline outline-offset-1"
   on:click={() => setCurrentImage("puppy")}
   on:click={() => setImage(puppyImage)}
   on:click={() => setPrompt(promptOptionsByImage["puppy"][0])}
@@ -38,6 +40,7 @@
   />
 </button>
 <button
+  class="focus-visible:outline-light-green focus-visible:outline outline-offset-1"
   on:click={() => setCurrentImage("car")}
   on:click={() => setImage(carImage)}
   on:click={() => setPrompt(promptOptionsByImage["car"][0])}
@@ -50,6 +53,7 @@
   />
 </button>
 <button
+  class="focus-visible:outline-light-green focus-visible:outline outline-offset-1"
   on:click={() => setCurrentImage("abstract")}
   on:click={() => setImage(abstractImage)}
   on:click={() => setPrompt(promptOptionsByImage["abstract"][0])}
@@ -62,6 +66,7 @@
   />
 </button>
 <button
+  class="focus-visible:outline-light-green focus-visible:outline outline-offset-1"
   on:click={() => setCurrentImage("pasta")}
   on:click={() => setImage(pastaImage)}
   on:click={() => setPrompt(promptOptionsByImage["pasta"][0])}
