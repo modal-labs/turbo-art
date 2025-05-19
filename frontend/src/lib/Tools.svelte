@@ -15,30 +15,36 @@
 </script>
 
 <div class="flex flex-col sm:gap-3 gap-2">
-  <div class="tools-container">
-    <button class="text-xs flex gap-1" on:click={undoOutputImage}>
+  <div class="flex items-center gap-2">
+    <button
+      class="flex items-center gap-2.5 w-full text-xs cursor-pointer hover:text-light-green clear-button hover:bg-light-green/20 active:bg-light-green/30 bg-light-green/10 focus-visible:outline-light-green focus-visible:outline outline-offset-1 back-button"
+      on:click={undoOutputImage}
+    >
       <Undo size={16} />Back
     </button>
-    <div class="w-[1px] h-4 bg-white/10" />
-    <button class="text-xs flex gap-1" on:click={redoOutputImage}>
+
+    <button
+      class="flex items-center gap-2.5 w-full text-xs cursor-pointer hover:text-light-green clear-button hover:bg-light-green/20 active:bg-light-green/30 bg-light-green/10 focus-visible:outline-light-green focus-visible:outline outline-offset-1 next-button"
+      on:click={redoOutputImage}
+    >
       <Redo size={16} />Next
     </button>
   </div>
   <button
-    class="special-button text-xs tools-container tools-container-sm yellow-background"
+    class="special-button text-xs tools-container tools-container-sm yellow-background focus-visible:outline-light-green focus-visible:outline outline-offset-1"
     on:click={enhance}
   >
     <Wand size={16} />Enhance
   </button>
   <button
-    class="text-xs tools-container tools-container-sm"
+    class="text-xs tools-container tools-container-sm focus-visible:outline-light-green focus-visible:outline outline-offset-1"
     on:click={movetoCanvas}
   >
     <ArrowLeftSquare size={16} />Move to Canvas
   </button>
 
   <button
-    class="text-xs tools-container tools-container-sm"
+    class="text-xs tools-container tools-container-sm focus-visible:outline-light-green focus-visible:outline outline-offset-1"
     on:click={downloadImage}
   >
     <ArrowDownToLine size={16} /> Download
@@ -59,5 +65,10 @@
 
   .yellow-background {
     @apply bg-muted-yellow text-gray-900;
+  }
+
+  .back-button,
+  .next-button {
+    @apply flex py-2 px-3 border rounded-[10px] border-light-green/5  w-fit cursor-auto;
   }
 </style>
