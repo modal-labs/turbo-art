@@ -1,20 +1,48 @@
 from pathlib import Path
 
+import modal
 from fastapi import FastAPI, File, Form, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
-from modal import Image, Mount, App, asgi_app, build, enter, gpu, web_endpoint
 
-app = App("stable-diffusion-xl-turbo")
+app = modal.App("stable-diffusion-xl-turbo")
 
-web_image = Image.debian_slim().pip_install("jinja2", "fastapi[standard]")
+assets_path = Path(__file__).parent / "dist"
 
-inference_image = Image.debian_slim().pip_install(
-    "Pillow~=10.1.0",
-    "diffusers~=0.24",
-    "transformers~=4.35",
-    "accelerate~=0.25",
-    "safetensors~=0.4",
-    "fastapi[standard]",
+web_image = (
+    modal.Image.debian_slim()
+    .pip_install("jinja2", "fastapi[standard]")
+    .add_local_dir(assets_path, "/assets")
+)
+
+
+def download_weights():
+    from huggingface_hub import snapshot_download
+
+    # Ignore files that we don't need to speed up download time.
+    ignore = [
+        "*.bin",
+        "*.onnx_data",
+        "*/diffusion_pytorch_model.safetensors",
+    ]
+
+    snapshot_download("stabilityai/sdxl-turbo", ignore_patterns=ignore)
+
+    # https://huggingface.co/docs/diffusers/main/en/using-diffusers/sdxl_turbo#speed-up-sdxl-turbo-even-more
+    # vae is used for a inference speedup
+    snapshot_download("madebyollin/sdxl-vae-fp16-fix", ignore_patterns=ignore)
+
+
+inference_image = (
+    modal.Image.debian_slim()
+    .pip_install(
+        "Pillow~=10.1.0",
+        "diffusers~=0.24",
+        "transformers~=4.35",
+        "accelerate~=0.25",
+        "safetensors~=0.4",
+        "fastapi[standard]",
+    )
+    .run_function(download_weights)
 )
 
 with inference_image.imports():
@@ -29,28 +57,11 @@ with inference_image.imports():
 @app.cls(
     gpu="A100",
     image=inference_image,
-    container_idle_timeout=240,
-    concurrency_limit=10,
+    scaledown_window=240,
+    max_containers=10,
 )
 class Model:
-    @build()
-    def build(self):
-        from huggingface_hub import snapshot_download
-
-        # Ignore files that we don't need to speed up download time.
-        ignore = [
-            "*.bin",
-            "*.onnx_data",
-            "*/diffusion_pytorch_model.safetensors",
-        ]
-
-        snapshot_download("stabilityai/sdxl-turbo", ignore_patterns=ignore)
-
-        # https://huggingface.co/docs/diffusers/main/en/using-diffusers/sdxl_turbo#speed-up-sdxl-turbo-even-more
-        # vae is used for a inference speedup
-        snapshot_download("madebyollin/sdxl-vae-fp16-fix", ignore_patterns=ignore)
-
-    @enter()
+    @modal.enter()
     def enter(self):
         self.pipe = AutoPipelineForImage2Image.from_pretrained(
             "stabilityai/sdxl-turbo",
@@ -75,7 +86,7 @@ class Model:
             seed=42,
         )
 
-    @web_endpoint(method="POST")
+    @modal.fastapi_endpoint(method="POST")
     async def inference(
         self,
         image: UploadFile = File(...),
@@ -108,26 +119,21 @@ class Model:
         return Response(content=img_data_out, media_type="image/jpeg")
 
 
-base_path = Path(__file__).parent
-static_path = base_path.joinpath("frontend", "dist")
-
-
-@app.function(
-    mounts=[Mount.from_local_dir(static_path, remote_path="/assets")],
-    image=web_image,
-    allow_concurrent_inputs=10,
-)
-@asgi_app()
+@app.function(image=web_image)
+@modal.concurrent(max_inputs=10)
+@modal.asgi_app()
 def fastapi_app():
+    import jinja2
+
     web_app = FastAPI()
-    from jinja2 import Template
 
     with open("/assets/index.html", "r") as f:
         template_html = f.read()
 
-    template = Template(template_html)
+    template = jinja2.Template(template_html)
 
     with open("/assets/index.html", "w") as f:
+        # Mount the {{ inference_url }} with the Modal inference endpoint.
         html = template.render(inference_url=Model.inference.web_url)
         f.write(html)
 

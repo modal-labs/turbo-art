@@ -65,24 +65,25 @@
   $: isLoading = false;
   let isInputImageLoading = false;
 
-  $: brushSize = "sm";
-  $: paint = "black"; // can be hex
+  let brushSize = "sm";
+  let paint = "#000000";
   const radiusByBrushSize: Record<string, number> = {
     xs: 1,
     sm: 2,
     md: 3,
     lg: 4,
   };
-  const setPaint = (e: CustomEvent<string>) => {
-    paint = e.detail;
-  };
-  const setBrushSize = (e: CustomEvent<string>) => {
-    brushSize = e.detail;
-  };
 
-  const checkBreakpoint = () => {
+  function setPaint(e: CustomEvent<string>) {
+    paint = e.detail;
+  }
+  function setBrushSize(e: CustomEvent<string>) {
+    brushSize = e.detail;
+  }
+
+  function checkBreakpoint() {
     isMobile = window.innerWidth < 640;
-  };
+  }
 
   onMount(() => {
     // Manual mobile check is needed because of binding issues with <ImageOutput />
@@ -121,7 +122,7 @@
     return () => window.removeEventListener("resize", checkBreakpoint);
   });
 
-  const onLoadInputImg = (event: Event) => {
+  function onLoadInputImg(event: Event) {
     resizeImage(event);
 
     isImageUploaded = true;
@@ -133,16 +134,16 @@
       generateOutputImage();
       isFirstImageGenerated = true;
     }
-  };
+  }
 
-  const setImage = (src: string) => {
+  function setImage(src: string) {
     isInputImageLoading = true;
     imgInput.src = src;
 
     outputImageHistory.unshift(src);
     currentOutputImageIndex = 0;
 
-    const loopGenerate = () => {
+    function loopGenerate() {
       if (isInputImageLoading) {
         // wait for onload before generating an image
         setTimeout(loopGenerate, 100);
@@ -150,20 +151,20 @@
       }
 
       generateOutputImage();
-    };
+    }
 
     loopGenerate();
-  };
+  }
 
-  const setPrompt = (prompt: string) => {
+  function setPrompt(prompt: string) {
     value = prompt;
     generateOutputImage();
-  };
+  }
 
   // Our images need to be sized 320x320 for both input and output
   // This is important because we combine the canvas layer with the image layer
   // so the pixels need to matchup.
-  const resizeImage = (event: Event) => {
+  function resizeImage(event: Event) {
     const target = event.target as HTMLImageElement;
 
     let newWidth;
@@ -180,7 +181,7 @@
 
     target.style.height = `${newHeight}px`;
     target.style.width = `${newWidth}px`;
-  };
+  }
 
   function loadImage(e: Event) {
     const target = e.target as HTMLInputElement;
@@ -232,36 +233,32 @@
 
   const throttledgenerateOutputImage = throttle(
     250,
-    () => {
-      generateOutputImage();
-    },
-    { noLoading: false, noTrailing: false }
+    () => generateOutputImage(),
+    { noLeading: false, noTrailing: false }
   );
 
   const debouncedgenerateOutputImage = debounce(
     100,
-    () => {
-      generateOutputImage();
-    },
+    () => generateOutputImage(),
     { atBegin: false }
   );
 
-  const movetoCanvas = () => {
+  function movetoCanvas() {
     imgInput.src = imgOutput.src;
-  };
+  }
 
-  const downloadImage = () => {
+  function downloadImage() {
     let a = document.createElement("a");
     a.href = imgOutput.src;
     a.download = "modal-generated-image.jpeg";
     a.click();
-  };
+  }
 
-  const enhance = () => {
+  function enhance() {
     generateOutputImage(true, 10);
-  };
+  }
 
-  const redoOutputImage = () => {
+  function redoOutputImage() {
     if (currentOutputImageIndex > 0 && outputImageHistory.length > 1) {
       currentOutputImageIndex -= 1;
       imgOutput.src = outputImageHistory[currentOutputImageIndex];
@@ -272,25 +269,25 @@
       }
       generateOutputImage(true);
     }
-  };
+  }
 
-  const undoOutputImage = () => {
+  function undoOutputImage() {
     if (currentOutputImageIndex < outputImageHistory.length - 1) {
       currentOutputImageIndex += 1;
       imgOutput.src = outputImageHistory[currentOutputImageIndex];
     }
-  };
+  }
 
-  const resetInput = () => {
+  function resetInput() {
     if (fileInput) {
       fileInput.value = "";
     }
-  };
+  }
 
-  const generateOutputImage = async (
+  async function generateOutputImage(
     useOutputImage: boolean = false,
     iterations: number = 2
-  ) => {
+  ) {
     isLoading = true;
     const data = await getImageData(useOutputImage);
 
@@ -300,31 +297,33 @@
     formData.append("num_iterations", iterations.toString());
 
     const sentAt = new Date().getTime();
-    fetch(window.INFERENCE_BASE_URL, {
-      method: "POST",
-      body: formData,
-    })
-      .then((res) => res.blob())
-      .then((blob) => {
-        if (sentAt > lastUpdatedAt) {
-          const imageURL = URL.createObjectURL(blob);
-          outputImageHistory = [imageURL, ...outputImageHistory];
-          if (outputImageHistory.length > 10) {
-            outputImageHistory = outputImageHistory.slice(0, 10);
-          }
-          imgOutput.src = imageURL;
-          if (useOutputImage) {
-            numIterations += iterations;
-          } else {
-            numIterations = 1;
-          }
-          lastUpdatedAt = sentAt;
-        }
+    try {
+      const res = await fetch((window as any).INFERENCE_BASE_URL, {
+        method: "POST",
+        body: formData,
+      });
+      const blob = await res.blob();
 
-        isFirstImageGenerated = true;
-      })
-      .finally(() => (isLoading = false));
-  };
+      if (sentAt > lastUpdatedAt) {
+        const imageURL = URL.createObjectURL(blob);
+        outputImageHistory = [imageURL, ...outputImageHistory];
+        if (outputImageHistory.length > 10) {
+          outputImageHistory = outputImageHistory.slice(0, 10);
+        }
+        imgOutput.src = imageURL;
+        if (useOutputImage) {
+          numIterations += iterations;
+        } else {
+          numIterations = 1;
+        }
+        lastUpdatedAt = sentAt;
+      }
+
+      isFirstImageGenerated = true;
+    } finally {
+      isLoading = false;
+    }
+  }
 </script>
 
 <main class="flex flex-col items-center md:pt-12 text-light-green">
@@ -403,7 +402,7 @@
                 width={320}
                 height={320}
                 class="z-1"
-              />
+              ></canvas>
             </div>
             {#if isMobile}
               <ImageOutput
@@ -541,9 +540,5 @@
 
   .prompt-active {
     @apply text-light-green border-light-green/80;
-  }
-
-  :global(.tools-container) {
-    @apply flex gap-2.5 py-2 px-3 border rounded-[10px] border-light-green/5 bg-light-green/10 w-fit;
   }
 </style>

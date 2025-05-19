@@ -11,16 +11,16 @@ The entire app is serverless and hosted on [Modal](https://modal.com/).
 ### File structure
 
 - [turbo_art.py](./turbo_art.py) - model endpoint and FastAPI web server (<150 lines of code!)
-- [frontend](./frontend) - Svelte frontend
+- [src/](./src) - Svelte frontend
 
 ### Requirements
 
 To run this for yourself, you will need:
 
-1. Modal installed and set up locally
+1. Modal installed and set up locally, as well as FastAPI
 
 ```shell
-pip install modal
+pip install modal fastapi
 modal setup
 ```
 
@@ -30,11 +30,11 @@ modal setup
 
 During development, it's useful to have both the frontend and the Modal application automatically react to changes in the code. To do this, you'll need to run two processes.
 
-First, in one shell session, `cd` into the `frontend` directory and run:
+First, in one shell session, run:
 
 ```shell
 npm install
-npx vite build --watch
+npm run build:watch
 ```
 
 Then, in another shell session, run:
@@ -50,7 +50,7 @@ In the terminal output, you'll find a URL that you can visit to use your app. Wh
 Once you're happy with your changes, [deploy](https://modal.com/docs/guide/managing-deployments#creating-deployments) your app:
 
 ```shell
-npx vite build
+npm run build
 modal deploy turbo_art.py
 ```
 
