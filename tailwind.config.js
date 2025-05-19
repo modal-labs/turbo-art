@@ -1,9 +1,8 @@
-/* ##RefactorExamplesComponentsAndStyles */
-import defaultTheme from 'tailwindcss/defaultTheme';
+import defaultTheme from "tailwindcss/defaultTheme";
 
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{html,js,svelte,ts}'],
+  content: ["./index.html", "./src/**/*.{html,js,svelte,ts}"],
   theme: {
     extend: {
       screens: {
@@ -14,7 +13,7 @@ export default {
         // Theme colors
         primary: "#7FEE64",
         "light-green": "#DDFFDC",
-        "muted-yellow": "#FFEA71"
+        "muted-yellow": "#FFEA71",
       },
       fontFamily: {
         mono: ["Fira Mono", ...defaultTheme.fontFamily.mono],
@@ -37,5 +36,4 @@ export default {
     },
   },
   plugins: [],
-}
-
+};

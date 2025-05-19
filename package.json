@@ -1,31 +1,32 @@
 {
-  "name": "src",
+  "name": "turbo-art",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --watch",
+    "build": "vite build",
+    "build:watch": "vite build --watch",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^3.0.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@tsconfig/svelte": "^5.0.2",
-    "@types/node": "^20.10.4",
+    "@types/node": "^22.15.19",
+    "@types/throttle-debounce": "^5.0.2",
     "autoprefixer": "^10.4.16",
     "color-picker-svelte": "^1.4.0",
-    "postcss": "^8.4.32",
-    "svelte": "^4.2.19",
-    "svelte-check": "^3.6.0",
-    "tailwindcss": "^3.3.6",
+    "svelte": "^5.30.2",
+    "svelte-check": "^4.2.1",
+    "tailwindcss": "^3.4.17",
     "tslib": "^2.6.2",
     "typescript": "^5.2.2",
-    "vite": "^5.4.6"
+    "vite": "^6.3.5"
   },
   "dependencies": {
-    "@types/three": "^0.159.0",
-    "lucide-svelte": "^0.294.0",
+    "@types/three": "^0.176.0",
+    "lucide-svelte": "^0.511.0",
     "paper": "^0.12.17",
     "postprocessing": "^6.33.4",
     "three": "^0.159.0",
