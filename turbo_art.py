@@ -2,7 +2,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
-from modal import Image, Mount, App, asgi_app, build, enter, gpu, fastapi_endpoint, concurrent
+from modal import Image, App, asgi_app, build, enter, gpu, fastapi_endpoint, concurrent
 
 app = App("stable-diffusion-xl-turbo")
 
@@ -111,10 +111,8 @@ class Model:
 base_path = Path(__file__).parent
 static_path = base_path.joinpath("frontend", "dist")
 
-@app.function(
-    mounts=[Mount.from_local_dir(static_path, remote_path="/assets")],
-    image=web_image,
-)
+web_image.add_local_dir(static_path, remote_path="/assets")
+@app.function(image=web_image)
 @concurrent(max_inputs=10)
 @asgi_app()
 def fastapi_app():
